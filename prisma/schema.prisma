@@ -1,0 +1,167 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+model Classification {
+  id        Int      @id @default(autoincrement())
+  question  String
+  response  String
+  clientId  String
+  embedding Unsupported("vector")?
+  createdAt DateTime @default(now())
+
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+}
+
+model Client {
+  id                    String            @id @default(uuid())
+  name                  String
+  email                 String            @unique
+  companyName           String
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  whatsappAccessToken   String?
+  whatsappBusinessId    String?
+  whatsappPhoneNumberId String?
+  systemPersona         String?
+  telegramBotToken      String?
+  telegramVerifyToken   String?
+  contactConfig         ContactConfig[]
+  historyConfig         HistoryConfig[]
+  knowledgeChunks       KnowledgeChunk[]
+  memoryConfig          MemoryConfig[]
+  pricingConfig         PricingConfig[]
+  servicesConfig        ServicesConfig[]
+  smalltalkConfig       SmalltalkConfig[]
+  users                 User[]
+  whatsappNumbers       WhatsappNumber[]
+  endUsers              EndUser[]
+  classifications       Classification[]
+}
+
+model KnowledgeChunk {
+  id        String                 @id @default(uuid())
+  content   String
+  embedding Unsupported("vector")?
+  category  String
+  clientId  String
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  client    Client                 @relation(fields: [clientId], references: [id])
+
+  @@index([clientId, category])
+}
+
+model WhatsappNumber {
+  id          String   @id @default(uuid())
+  phoneNumber String   @unique
+  clientId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  client      Client   @relation(fields: [clientId], references: [id])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("user")
+  clientId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    Client   @relation(fields: [clientId], references: [id])
+}
+
+model ContactConfig {
+  id                String   @id @default(uuid())
+  clientId          String
+  contactSuggestion String
+  agentDescription  String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  client            Client   @relation(fields: [clientId], references: [id])
+}
+
+model HistoryConfig {
+  id               String   @id @default(uuid())
+  clientId         String
+  agentDescription String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  client           Client   @relation(fields: [clientId], references: [id])
+}
+
+model MemoryConfig {
+  id               String   @id @default(uuid())
+  clientId         String
+  memoryGuidelines String
+  agentDescription String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  client           Client   @relation(fields: [clientId], references: [id])
+}
+
+model PricingConfig {
+  id                String   @id @default(uuid())
+  clientId          String
+  agentDescription  String
+  noPricingInfoText String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  client            Client   @relation(fields: [clientId], references: [id])
+}
+
+model ServicesConfig {
+  id                String   @id @default(uuid())
+  clientId          String
+  agentDescription  String
+  conversationStyle String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  client            Client   @relation(fields: [clientId], references: [id])
+}
+
+model SmalltalkConfig {
+  id                  String   @id @default(uuid())
+  clientId            String
+  smalltalkGuidelines String
+  agentDescription    String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  client              Client   @relation(fields: [clientId], references: [id])
+}
+
+model EndUser {
+  id        String    @id @default(uuid())
+  clientId  String
+  chatId    String
+  name      String?
+  platform  String?   // "whatsapp", "telegram", "web"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  client    Client    @relation(fields: [clientId], references: [id])
+  messages  Message[]
+
+  @@unique([clientId, chatId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  endUserId String
+  role      String   // "user" or "model"
+  content   String
+  createdAt DateTime @default(now())
+  endUser   EndUser  @relation(fields: [endUserId], references: [id], onDelete: Cascade)
+
+  @@index([endUserId, createdAt])
+}

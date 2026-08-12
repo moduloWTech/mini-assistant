@@ -1,0 +1,22 @@
+# Aqui nós definimos os "serviços" (programas) que vão rodar simultaneamente na nossa máquina da GCP.
+services:
+  
+  # 1. A API do Mini-Assistant (Nosso código Node.js)
+  api:
+    image: ghcr.io/claudiojas/mini-assistant:latest
+    restart: always
+    ports:
+      # A porta "80" é a porta padrão da internet (HTTP). 
+      # O Cloudflare vai acessar a porta 80 da máquina GCP, e o Docker redireciona para a 3000 da aplicação.
+      - '80:3000'
+    env_file:
+      - .env.production # Carrega as variáveis secretas de produção
+    depends_on:
+      - redis
+
+  # 2. Fila de Mensagens (Redis)
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - '6380:6379'

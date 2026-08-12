@@ -1,0 +1,61 @@
+{
+  "nome": "Cláudio José Araújo Soares",
+  "formacao": [
+    "Tecnólogo em Análise e Desenvolvimento de Sistemas - UNIGRANDE",
+    "Curso Fullstack (JavaScript) - Cubos Academy - 8 meses (2022)",
+    "Curso Especialização Frontend (JavaScript) - Alura - 6 meses (2023)"
+  ],
+  "experiencia": [
+    {
+      "cargo": "Tech Lead Frontend",
+      "empresa": "Lacrei Saúde",
+      "periodo": "Dez/2024 - Mar/2025",
+      "principais_contribuicoes": [
+        "Liderança técnica da equipe de frontend",
+        "Garantia de boas práticas, acessibilidade e qualidade de código",
+        "Acompanhamento de processos de CI/CD e melhorias na plataforma"
+      ]
+    },
+    {
+      "cargo": "Desenvolvedor Frontend",
+      "empresa": "Lacrei Saúde",
+      "periodo": "Ago/2024 - Dez/2024",
+      "principais_contribuicoes": [
+        "Otimização do Design System",
+        "Automação de deploys",
+        "Implementação de práticas DevOps com GitHub Actions"
+      ]
+    },
+    {
+      "cargo": "Desenvolvedor Frontend Voluntário",
+      "empresa": "Instituto Manancial Mãos Unidas (IMMU)",
+      "periodo": "Fev/2025 - Atual",
+      "principais_contribuicoes": [
+        "Construção de um e-commerce para venda online de produtos artesanais usando Next.js, React, TypeScript e Tailwind CSS",
+        "Integração com plataformas de pagamento"
+      ]
+    }
+  ],
+  "projetos_pessoais": [
+    {
+      "nome": "Digital Pro",
+      "descricao": "Plataforma de aprendizado e compartilhamento de conhecimento sobre desenvolvimento de software"
+    },
+    {
+      "nome": "Monitoramento de Consumo de Água e Gás",
+      "descricao": "Projeto com Google Gemini e IA para otimização do armazenamento em banco de dados"
+    }
+  ],
+  "habilidades": [
+    "JavaScript",
+    "TypeScript",
+    "Node.js",
+    "React",
+    "Next.js",
+    "AWS",
+    "Docker",
+    "Prisma",
+    "PostgreSQL",
+    "MongoDB"
+  ]
+}
