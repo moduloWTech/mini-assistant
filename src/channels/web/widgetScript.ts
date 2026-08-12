@@ -13,7 +13,7 @@ export const getWidgetScript = (hostUrl: string) => `
   }
 
   var userId = 'web_' + Math.random().toString(36).substring(2, 9);
-  var apiUrl = '${hostUrl}';
+  var apiUrl = '${hostUrl}'.replace(/^http:\/\//, 'https://');
 
   // 2. Injeta os Estilos CSS Dinamicamente
   var style = document.createElement('style');
