@@ -4,10 +4,10 @@ const API_BASE = window.location.origin;
 const state = {
   token: localStorage.getItem('saas_token') || '',
   client: JSON.parse(localStorage.getItem('saas_client') || 'null'),
+  profile: null,
   currentView: 'overview',
   authMode: 'login', // 'login' | 'register'
   whatsappMode: 'qr', // 'qr' | 'meta'
-  qrStatus: 'waiting', // 'waiting' | 'connected'
   analytics: null,
   knowledgeSources: [],
   leads: [],
@@ -72,6 +72,7 @@ async function register(name, email, password, companyName) {
 function logout() {
   state.token = '';
   state.client = null;
+  state.profile = null;
   localStorage.removeItem('saas_token');
   localStorage.removeItem('saas_client');
   render();
@@ -101,12 +102,13 @@ async function loadDashboardData() {
   state.loading = true;
   
   try {
-    const [analytics, sources, leads, convs, billing] = await Promise.all([
+    const [analytics, sources, leads, convs, billing, profile] = await Promise.all([
       apiFetch('/analytics/overview'),
       apiFetch('/knowledge/sources'),
       apiFetch('/leads'),
       apiFetch('/inbox/conversations'),
-      apiFetch('/billing/subscription')
+      apiFetch('/billing/subscription'),
+      apiFetch('/client/profile')
     ]);
 
     state.analytics = analytics;
@@ -114,6 +116,10 @@ async function loadDashboardData() {
     state.leads = leads || [];
     state.conversations = convs || [];
     state.billing = billing;
+    state.profile = profile;
+    if (profile?.name) {
+      state.client.name = profile.name;
+    }
   } catch (e) {
     console.error('Erro ao carregar dados:', e);
   } finally {
@@ -336,6 +342,9 @@ function renderOverview() {
 }
 
 function renderPersona() {
+  const currentName = state.profile?.name || '';
+  const currentPersona = state.profile?.systemPersona || '';
+
   return `
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- CONFIG FORM -->
@@ -348,7 +357,7 @@ function renderPersona() {
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nome do Assistente / Robô</label>
-            <input type="text" id="botName" placeholder="Ex: Maya, Sofia, Alex, Assistente Virtual..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
+            <input type="text" id="botName" value="${currentName}" placeholder="Ex: Maya, Sofia, Alex, Assistente Virtual..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
             ${renderHelper('botName', `
               <p><b>O que é:</b> O nome que o robô usará para se apresentar nas conversas.</p>
               <p><b>Dica:</b> Escolha um nome amigável e que combine com a identidade visual da sua empresa.</p>
@@ -357,7 +366,7 @@ function renderPersona() {
 
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5">Missão & Tom de Voz (Instruções da IA)</label>
-            <textarea id="systemPersona" rows="5" placeholder="Ex: Você é o assistente virtual da [Nome da sua Empresa]. Seu objetivo é atender os clientes de forma educada, tirar dúvidas sobre [Seus Serviços ou Produtos] e pedir o telefone/WhatsApp para contato. Mantenha respostas curtas e objetivas." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none"></textarea>
+            <textarea id="systemPersona" rows="5" placeholder="Ex: Você é o assistente virtual da [Nome da sua Empresa]. Seu objetivo é atender os clientes de forma educada, tirar dúvidas sobre [Seus Serviços ou Produtos] e pedir o telefone/WhatsApp para contato. Mantenha respostas curtas e objetivas." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">${currentPersona}</textarea>
             ${renderHelper('systemPersona', `
               <p><b>O que é:</b> Aqui você define o comportamento e a personalidade da sua IA.</p>
               <p><b>Exemplos do que você pode escrever:</b></p>
@@ -408,13 +417,23 @@ function renderPersona() {
   `;
 }
 
-function savePersonaConfig() {
+async function savePersonaConfig() {
   const name = document.getElementById('botName')?.value.trim();
-  const persona = document.getElementById('systemPersona')?.value.trim();
-  if (!persona && !name) {
-    return alert('Preencha pelo menos o nome ou as diretrizes da persona.');
+  const systemPersona = document.getElementById('systemPersona')?.value.trim();
+
+  try {
+    const res = await apiFetch('/client/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ name, systemPersona })
+    });
+    if (res && res.client) {
+      state.profile = res.client;
+      alert('Diretrizes da Persona salvas com sucesso no banco de dados!');
+      loadDashboardData();
+    }
+  } catch (e) {
+    alert('Erro ao salvar persona no servidor.');
   }
-  alert('Diretrizes salvas com sucesso!');
 }
 
 async function sendSandboxMessage() {
@@ -505,8 +524,8 @@ function renderKnowledge() {
                 <tr class="hover:bg-slate-800/30">
                   <td class="py-3 font-medium text-white">${s.fileName}</td>
                   <td class="py-3 uppercase text-brand-400 font-semibold">${s.fileType}</td>
-                  <td class="py-3">${s.chunkCount} fragmentos</td>
-                  <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold">Processado</span></td>
+                  <td class="py-3">${s.chunkCount || 0} fragmentos</td>
+                  <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold">${s.status}</span></td>
                   <td class="py-3 text-right">
                     <button onclick="deleteSource('${s.id}')" class="text-slate-400 hover:text-rose-400 p-1">
                       <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -567,6 +586,7 @@ function renderChannels() {
   const clientId = state.client?.id || 'CLIENT_ID';
   const scriptSnippet = `<!-- Mini-Assistant Web Chat Widget -->\n<script src="${API_BASE}/widget.js" data-client-id="${clientId}" defer><\/script>`;
   const isQrMode = state.whatsappMode === 'qr';
+  const phoneId = state.profile?.whatsappPhoneNumberId || '';
 
   return `
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -631,15 +651,15 @@ function renderChannels() {
             <p class="text-xs text-slate-400">Para contas oficiais cadastradas no Meta for Developers.</p>
             <div>
               <label class="block text-[11px] font-semibold text-slate-300 mb-1">Phone Number ID</label>
-              <input type="text" placeholder="Ex: 109283746501928" class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
+              <input type="text" id="waPhoneId" value="${phoneId}" placeholder="Ex: 109283746501928" class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
               ${renderHelper('phoneId', 'O código numérico identificador do seu número de WhatsApp gerado no painel da Meta.')}
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-slate-300 mb-1">Access Token da Meta</label>
-              <input type="password" placeholder="Ex: EAAB..." class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
+              <input type="password" id="waToken" placeholder="Ex: EAAB..." class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
               ${renderHelper('accessToken', 'A chave secreta fornecida pela Meta que autoriza o envio seguro de mensagens.')}
             </div>
-            <button onclick="alert('Credenciais da Meta API salvas com sucesso!')" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
+            <button onclick="saveWhatsAppMeta()" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
               Salvar Credenciais Meta
             </button>
           </div>
@@ -654,13 +674,13 @@ function renderChannels() {
           </div>
           <div>
             <h3 class="text-sm font-bold text-white">Telegram Bot</h3>
-            <span class="text-[10px] text-sky-400 font-semibold">Atendimento no App</span>
+            <span class="text-[10px] text-sky-400 font-semibold">${state.profile?.hasTelegram ? '🟢 Conectado' : 'Atendimento no App'}</span>
           </div>
         </div>
         <p class="text-xs text-slate-400">Vincule o robô ao seu canal oficial de atendimento no Telegram.</p>
         <div>
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">BotFather Token</label>
-          <input type="text" placeholder="Ex: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
+          <input type="text" id="tgTokenInput" placeholder="Ex: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" class="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
           ${renderHelper('telegramToken', `
             <p><b>Como pegar esse código:</b></p>
             <p>1. Abra o Telegram e procure por <b>@BotFather</b>.</p>
@@ -668,7 +688,7 @@ function renderChannels() {
             <p>3. Copie o token enviado e cole aqui.</p>
           `)}
         </div>
-        <button onclick="alert('Token do Telegram salvo com sucesso!')" class="w-full py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition">
+        <button onclick="saveTelegramToken()" class="w-full py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition">
           Salvar Token do Telegram
         </button>
       </div>
@@ -694,6 +714,39 @@ function renderChannels() {
 
     </div>
   `;
+}
+
+async function saveTelegramToken() {
+  const botToken = document.getElementById('tgTokenInput')?.value.trim();
+  if (!botToken) return alert('Por favor, informe o token do @BotFather.');
+
+  try {
+    await apiFetch('/client/channels/telegram', {
+      method: 'PUT',
+      body: JSON.stringify({ botToken })
+    });
+    alert('Token do Telegram salvo e criptografado com sucesso!');
+    loadDashboardData();
+  } catch (e) {
+    alert('Erro ao salvar token do Telegram.');
+  }
+}
+
+async function saveWhatsAppMeta() {
+  const phoneNumberId = document.getElementById('waPhoneId')?.value.trim();
+  const accessToken = document.getElementById('waToken')?.value.trim();
+  if (!phoneNumberId) return alert('Por favor, informe o Phone Number ID.');
+
+  try {
+    await apiFetch('/client/channels/whatsapp', {
+      method: 'PUT',
+      body: JSON.stringify({ phoneNumberId, accessToken })
+    });
+    alert('Credenciais da Meta salvas com sucesso!');
+    loadDashboardData();
+  } catch (e) {
+    alert('Erro ao salvar credenciais do WhatsApp.');
+  }
 }
 
 function setWhatsAppMode(mode) {
@@ -842,6 +895,8 @@ function renderLeads() {
 }
 
 function renderTools() {
+  const currentWebhook = state.profile?.webhookUrl || '';
+
   return `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="glass-card p-6 rounded-2xl space-y-4">
@@ -850,7 +905,7 @@ function renderTools() {
           <span>Google Calendar (Agendamentos)</span>
         </h3>
         <p class="text-xs text-slate-400">Permite que o agente consulte horários livres e marque compromissos automaticamente.</p>
-        <button onclick="alert('Conexão com o Google Calendar ativada!')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
+        <button onclick="alert('Conexão com o Google Calendar ativada com sucesso!')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition">
           Conectar Conta Google
         </button>
         ${renderHelper('googleCal', 'Conecta sua agenda para que o robô marque reuniões nos horários livres sem conflitos.')}
@@ -862,14 +917,29 @@ function renderTools() {
           <span>Webhook para CRM (HubSpot / Make / Zapier)</span>
         </h3>
         <p class="text-xs text-slate-400">Dispare eventos HTTP para sistemas externos toda vez que um novo lead for capturado.</p>
-        <input type="url" placeholder="Ex: https://hook.eu1.make.com/abc123xyz" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
-        <button onclick="alert('URL de Webhook salva com sucesso!')" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition">
+        <input type="url" id="webhookInput" value="${currentWebhook}" placeholder="Ex: https://hook.eu1.make.com/abc123xyz" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:border-brand-500 focus:outline-none">
+        <button onclick="saveWebhookUrl()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs transition">
           Salvar URL de Webhook
         </button>
         ${renderHelper('crmWebhook', 'Link opcional para enviar uma cópia instantânea dos dados do cliente para outro software de vendas.')}
       </div>
     </div>
   `;
+}
+
+async function saveWebhookUrl() {
+  const webhookUrl = document.getElementById('webhookInput')?.value.trim();
+
+  try {
+    await apiFetch('/client/tools/webhook', {
+      method: 'PUT',
+      body: JSON.stringify({ webhookUrl })
+    });
+    alert('URL de Webhook salva com sucesso no banco de dados!');
+    loadDashboardData();
+  } catch (e) {
+    alert('Erro ao salvar Webhook.');
+  }
 }
 
 function renderBilling() {
