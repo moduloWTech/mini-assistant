@@ -1,6 +1,24 @@
 services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: mini_assistant_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: mini_assistant
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    restart: always
+
   redis:
     image: redis:alpine
+    container_name: mini_assistant_redis
     ports:
       - '6380:6379'
     restart: always
+
+volumes:
+  pgdata:

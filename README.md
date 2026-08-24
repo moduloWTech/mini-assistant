@@ -1,133 +1,96 @@
-# 🌌 Mini-Assistant - Plataforma SaaS Multi-Agente
+# 🌌 Mini-Assistant Enterprise - Plataforma SaaS Multi-Agente (White-Label)
 
-Bem-vindo ao repositório oficial do **Mini-Assistant**! Este é o motor (Backend) de uma plataforma **SaaS (Software as a Service) Enterprise** para criação de agentes de Inteligência Artificial ultra-personalizados.
-
-> 💡 **Nota Importante:**
-> A persona **Keiko** é a agente configurada especificamente para a **MW Technology** (empresa criadora do projeto) e está sendo utilizada como ambiente prático de testes em produção para validar recursos e identificar possíveis gargalos de experiência de uso antes de abrir a plataforma para vendas comerciais.
+Bem-vindo ao repositório oficial do **Mini-Assistant Enterprise**! Esta é uma plataforma **Turnkey / Standalone 100% autônoma** de Inteligência Artificial Multi-Agente com busca vetorial (RAG), canais omnichannel (WhatsApp, Telegram, Web) e Painel Administrativo moderno.
 
 ---
 
-## 👁️ Visão de Produto (O que estamos construindo?)
+## 💡 Visão de Produto & Diferenciais Comerciais
 
-O **Mini-Assistant** nasce com o propósito de escalar o atendimento inteligente. Em vez de ser um bot engessado, o sistema foi desenhado para ser **Multi-Tenant**. Isso significa que:
+O **Mini-Assistant** foi arquitetado para ser entregue como um **produto completo e independente (Self-Contained)** para qualquer empresa que queira iniciar no mercado de agentes de IA:
 
-- 🏢 **Cada Cliente é Único:** Diferentes empresas podem assinar a plataforma. Cada uma terá o seu próprio bot (com nome, personalidade, e token de WhatsApp/Telegram independentes).
-- 🧠 **Cérebros Isolados (RAG):** O conhecimento da "Empresa A" não se mistura com o da "Empresa B". Utilizamos bancos de dados vetoriais para dar contexto e embasamento real às falas do bot.
-- 🎭 **Orquestração de Múltiplos Agentes:** O sistema não joga toda a conversa num prompt gigante. Um **Orquestrador** inteligente classifica a intenção do usuário e delega para o agente certo (Vendas, Smalltalk, História, Memória).
-
-### 🎯 O Futuro do Frontend (Dashboard Administrativo)
-A próxima grande fase do projeto é o Frontend (React/Next.js). O Dashboard não precisará se preocupar com a engenharia complexa de IA. Ele servirá para:
-1. **Onboarding:** Formulários simples para o dono da empresa batizar a IA, definir a Missão e a "Tom de Voz".
-2. **Knowledge Base:** Upload de PDFs ou textos para alimentar o cérebro vetorial daquela empresa específica.
-3. **Métricas e Leads:** Visualização das conversas e contatos capturados pelos agentes.
+- 🏢 **Multi-Tenant Nativo:** Cada empresa possui seu cérebro, persona, contatos e configurações isoladas.
+- 🐳 **100% Autônomo (Zero Dependência Cloud para Testes):** O sistema roda localmente com PostgreSQL (`pgvector`) e Redis em contêineres Docker, permitindo testes completos e demonstrações sem custos de infraestrutura de terceiros.
+- 🖥️ **Painel Administrativo Completo:** Interface visual moderna em Dark Mode (`/dashboard`) para gestão de personas, upload de documentos, live chat e CRM de leads.
+- ⚡ **Cache Semântico & Fast-Path:** Redução drástica de custos de LLM respondendo perguntas recorrentes em milissegundos com similaridade vetorial de cosseno.
+- 🛡️ **Resiliência Multi-LLM:** Circuit-breaker com fallback automático (Google Gemini 2.5 Flash ➔ OpenAI GPT-4o-mini).
 
 ---
 
-> 📘 **Atenção Desenvolvedor:** Para entender o design pattern Multi-Agentes utilizado neste Core e replicar essa inteligência para outros nichos (ex: Moda, Imobiliária), leia o documento mestre: [Arquitetura Definitiva de Agentes de IA](DOCS/AGENTS_ARCHITECTURE.md). E para entender a visão de negócio e monetização de habilidades, leia: [Estratégia SaaS](DOCS/SAAS_STRATEGY.md). Se for iniciar o Frontend, leia: [Requisitos do Dashboard](DOCS/DASHBOARD_REQUIREMENTS.md).
-
----
-
-## 🏗️ Visão Técnica & Arquitetura
-
-Nossa infraestrutura foi desenhada para aguentar carga pesada (Alta Disponibilidade) e responder em milissegundos nos webhooks das redes sociais.
-
-### 🧩 Pilares Tecnológicos
-- **Linguagem & Framework:** Node.js, Express, TypeScript.
-- **Inteligência Artificial:** Google Gemini 2.5 Flash via chamadas diretas (v1beta API).
-- **Banco de Dados Relacional & Vetorial:** PostgreSQL + Prisma ORM + extensão `pgvector` (índices HNSW de 768 dimensões).
-- **Filas Assíncronas:** Redis + BullMQ (Para devolver `200 OK` para o WhatsApp/Telegram instantaneamente, processando o LLM em background).
-- **Segurança (Criptografia B2B):** Senhas e Tokens de redes sociais são armazenados usando criptografia simétrica `AES-256-GCM`.
-- **Deploy Automático (CI/CD):** Imagens buildadas no GitHub Actions e publicadas no GHCR.
-
----
-
-## 🔌 Guia de Integração para o Frontend
-
-Quando formos conectar o Frontend a esta API, aqui estão os pontos focais:
-
-### 1. Entidades Principais no Prisma
-- `Client`: A empresa que assina o SaaS. Possui as configurações globais (`systemPersona`) e os tokens de integração.
-- `CompanyData`: Os "pedaços de conhecimento" da empresa, armazenados em formato vetorial para a busca semântica (RAG).
-- `*Config` (ex: `MemoryConfig`, `PricingConfig`): Tabelas de configuração granular de como cada agente específico deve se portar para aquele cliente.
-- `EndUser` e `Message`: O histórico de conversa entre um usuário do WhatsApp/Telegram/Web e a IA.
-
-### 2. Acesso à API Web (Widget)
-A plataforma possui um canal genérico `/channels/web/message` que o frontend pode consumir diretamente para renderizar um chat interativo (Widget) no site da própria empresa cliente.
-
-> 🌐 **Dica Prática:** Criamos um guia com um código React (`ChatWidget.tsx`) pronto para copiar e colar no seu site. Veja em: [Guia de Integração Web](DOCS/WEB_INTEGRATION.md).
-
----
-
-## ⚙️ Configuração e Execução (Ambiente Dev)
-
-Para rodar este monstro localmente e desenvolver novas features, siga o roteiro:
+## 🚀 Inicialização Rápida (Turnkey em 3 Passos)
 
 ### 1. Pré-Requisitos
-- **Node.js** (v20+)
-- **Docker & Docker Compose** (Para rodar o Banco e o Redis)
-- Chave de API do **Google Gemini**
+* **Node.js** (v20+)
+* **Docker & Docker Compose**
 
-### 2. Subindo a Infraestrutura Local
+### 2. Executando o Deploy Automático
+Na pasta raiz do projeto, execute o script de provisionamento:
 ```bash
-# Clone o repositório
-git clone https://github.com/claudiojas/mini-assistant.git
-cd mini-assistant
+./deploy.sh
+```
 
-# Instale os pacotes
+Ou execute manualmente passo a passo:
+```bash
+# 1. Copie o arquivo de variáveis de ambiente
+cp .env.example .env
+
+# 2. Suba o banco de dados (PostgreSQL com pgvector) e o Redis no Docker
+docker compose up -d
+
+# 3. Instale as dependências e sincronize as tabelas
 npm install
-
-# Inicie o PostgreSQL e o Redis pelo Docker Compose
-sudo docker compose up -d
-
-# Crie as tabelas no banco de dados e gere os tipos do Prisma
-npx prisma db push
 npx prisma generate
-```
+npx prisma db push
 
-### 3. Configurando as Variáveis (.env)
-Copie o arquivo `.env.example` para `.env` e preencha as variáveis de ambiente (especialmente o `GEMINI_API_KEY` e a `ENCRYPTION_KEY`). A `REDIS_URL` padrão local é `redis://localhost:6379`.
+# 4. Popule o usuário administrador inicial
+npx tsx scripts/seed-admin.ts
 
-### 4. Populando Dados de Teste (Seed)
-Nós possuímos scripts robustos para simular uma empresa ("MW Technology") e testar o funcionamento sem precisar de um Frontend:
-
-```bash
-# 1. Cria a persona "Keiko" e as diretrizes dos agentes no Banco
-npm run setup:client
-
-# 2. Transforma textos da empresa em Vetores e salva no pgvector
-npm run seed:knowledge
-```
-
-### 5. Iniciando o Servidor Node
-```bash
+# 5. Inicie o servidor
 npm run dev
 ```
 
 ---
 
-## 🧪 Testes de Estresse e Simulação
+## 🌐 Acessos e Endpoints
 
-A API conta com scripts de simulação de canais. Você pode rodar testes rigorosos pelo terminal sem precisar abrir o Postman:
+Após iniciar o servidor (`npm run dev`), acesse:
 
-- `npx tsx scripts/tests/test-channels.ts`: Dispara eventos falsos simulando webhooks do WebChat e Telegram.
-- `npx tsx scripts/tests/test-memory.ts`: Avalia se o Agente de Memória consegue resgatar nomes e contextos de mensagens antigas.
-- `npx tsx scripts/tests/e2e-test.ts`: Roda uma bateria completa de RAG.
+| Recurso | URL | Descrição |
+| :--- | :--- | :--- |
+| 🖥️ **Painel Administrativo** | `http://localhost:3000/dashboard` | Login: `admin@mwtechnology.com.br` / Senha: `123456` |
+| 📚 **Swagger OpenAPI Docs** | `http://localhost:3000/api-docs` | Documentação interativa de todos os endpoints REST |
+| 💬 **Widget Web Embeddable** | `http://localhost:3000/widget.js` | Script para inclusão em qualquer site HTML |
 
 ---
 
-## 🚀 CI/CD & Deploy na Produção
+## 🏛️ Estrutura Arquitetural
 
-O build é gerenciado pelo **GitHub Actions** (Workflow de `docker-build.yml`). Sempre que um código vai para a branch `main`:
-1. Uma máquina potente compila o Typescript.
-2. Gera a imagem Docker otimizada (baseada em Alpine).
-3. Publica de forma privada no **GHCR** (GitHub Container Registry).
-
-Para implantar as novidades na Máquina Virtual (GCP), rodamos:
-```bash
-git pull origin main
-sudo docker compose -f docker-compose.production.yml pull
-sudo docker compose -f docker-compose.production.yml up -d
+```
+mini-assistant/
+├── dashboard/               # Frontend SPA Administrativo (HTML5, TailwindCSS, Lucide Icons)
+├── prisma/                  # Schema do Banco de Dados Relacional e Vetorial (pgvector)
+├── src/
+│   ├── agentns/             # Agentes Especialistas (History, Pricing, Services, Contact, etc.)
+│   ├── channels/            # Adaptadores Omnichannel (WhatsApp, Telegram, Web)
+│   ├── docs/                # Configuração OpenAPI 3.0 / Swagger UI
+│   ├── middlewares/         # Autenticação JWT, Rate Limiting e Validador de Domínio
+│   ├── orchestrator/        # Orquestrador Central com Roteamento de Intenção e Fast-Path
+│   ├── queue/               # Fila Assíncrona com BullMQ + Redis (processamento de webhooks)
+│   ├── repository/          # Camada de Repositório (Busca Vetorial de Cosseno e Chat Memory)
+│   ├── router/              # Rotas REST (/auth, /knowledge, /leads, /inbox, /billing, /analytics)
+│   ├── services/            # Gateway Multi-LLM, Parsers de PDF/TXT e Web Scraper
+│   └── tools/               # Dynamic Function Calling (Google Calendar, CRM Leads)
+├── deploy.sh                # Script Turnkey de Inicialização Rápida
+├── docker-compose.yml       # Orquestração local autônoma (PostgreSQL 17 pgvector + Redis)
+└── TODO.md                  # Checklist Mestre de Engenharia e Produto
 ```
 
 ---
-*Construído com obsessão por performance, RAG assíncrono e muito ☕.*
+
+## 📘 Documentação Adicional
+
+* [Manual de Entrega White-Label](DOCS/WHITE_LABEL_HANDBOOK.md)
+* [Arquitetura Definitiva de Agentes](DOCS/AGENTS_ARCHITECTURE.md)
+* [Estratégia de Monetização SaaS](DOCS/SAAS_STRATEGY.md)
+
+---
+*Desenvolvido para Alta Disponibilidade, Escala Comercial e Máxima Eficiência.*

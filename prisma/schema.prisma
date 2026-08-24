@@ -17,7 +17,7 @@ model Classification {
   embedding Unsupported("vector")?
   createdAt DateTime @default(now())
 
-  client    Client   @relation(fields: [clientId], references: [id])
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([clientId])
 }
@@ -27,17 +27,31 @@ model Client {
   name                  String
   email                 String            @unique
   companyName           String
+  niche                 String?           @default("general") // "ecommerce", "clinic", "real_estate", "services", "general"
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
+  
+  // Channels credentials
   whatsappAccessToken   String?
   whatsappBusinessId    String?
   whatsappPhoneNumberId String?
   systemPersona         String?
   telegramBotToken      String?
   telegramVerifyToken   String?
+  
+  // Enterprise & Tool Configuration
+  activeTools           Json?             @default("[]") // Array of tool names enabled e.g. ["capture_lead", "google_calendar"]
+  allowedDomains        Json?             @default("[\"*\"]") // Array of allowed origins for web widget
+  webhookUrl            String?           // Webhook destination for lead & event forwarding
+  crmType               String?           @default("webhook") // "webhook", "hubspot", "pipedrive"
+  googleCalendarToken   String?           // Encrypted OAuth / Refresh Token for Calendar
+  widgetConfig          Json?             @default("{\"primaryColor\":\"#2563eb\",\"title\":\"Atendimento Virtual\",\"welcomeMessage\":\"Olá! Como posso te ajudar hoje?\",\"position\":\"right\"}")
+
+  // Relations
   contactConfig         ContactConfig[]
   historyConfig         HistoryConfig[]
   knowledgeChunks       KnowledgeChunk[]
+  documentSources       DocumentSource[]
   memoryConfig          MemoryConfig[]
   pricingConfig         PricingConfig[]
   servicesConfig        ServicesConfig[]
@@ -46,19 +60,101 @@ model Client {
   whatsappNumbers       WhatsappNumber[]
   endUsers              EndUser[]
   classifications       Classification[]
+  leads                 Lead[]
+  subscriptions         Subscription[]
+  tokenLogs             TokenUsageLog[]
+}
+
+model DocumentSource {
+  id          String           @id @default(uuid())
+  clientId    String
+  fileName    String
+  fileType    String           // "pdf", "docx", "txt", "csv", "url"
+  fileSize    Int?             @default(0)
+  url         String?
+  status      String           @default("processed") // "pending", "processing", "processed", "error"
+  chunkCount  Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  client      Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  chunks      KnowledgeChunk[]
+
+  @@index([clientId])
 }
 
 model KnowledgeChunk {
-  id        String                 @id @default(uuid())
-  content   String
-  embedding Unsupported("vector")?
-  category  String
-  clientId  String
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
-  client    Client                 @relation(fields: [clientId], references: [id])
+  id               String          @id @default(uuid())
+  content          String
+  embedding        Unsupported("vector")?
+  category         String          // "history", "services", "pricing", "general", "faq"
+  clientId         String
+  documentSourceId String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  client           Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  documentSource   DocumentSource? @relation(fields: [documentSourceId], references: [id], onDelete: SetNull)
 
   @@index([clientId, category])
+  @@index([documentSourceId])
+}
+
+model Lead {
+  id            String    @id @default(uuid())
+  clientId      String
+  endUserId     String?
+  name          String
+  phone         String?
+  email         String?
+  interest      String?   // What the lead was interested in (services, product, pricing)
+  notes         String?
+  status        String    @default("new") // "new", "contacted", "qualified", "converted", "archived"
+  sourceChannel String    @default("web") // "whatsapp", "telegram", "web"
+  metadata      Json?     @default("{}")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  endUser       EndUser?  @relation(fields: [endUserId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, status])
+  @@index([clientId, createdAt])
+}
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  clientId             String
+  plan                 String    @default("basic") // "free", "basic", "pro", "enterprise"
+  status               String    @default("active") // "active", "past_due", "canceled", "trialing"
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  monthlyMessageLimit  Int       @default(1000)
+  currentMessagesCount Int       @default(0)
+  currentPeriodStart   DateTime  @default(now())
+  currentPeriodEnd     DateTime
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  client               Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model TokenUsageLog {
+  id          String   @id @default(uuid())
+  clientId    String
+  channel     String   // "whatsapp", "telegram", "web"
+  model       String   // "gemini-flash-latest", "gpt-4o-mini", "cached"
+  inputTokens Int      @default(0)
+  outputTokens Int     @default(0)
+  isFastPath  Boolean  @default(false)
+  latencyMs   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, createdAt])
 }
 
 model WhatsappNumber {
@@ -67,7 +163,7 @@ model WhatsappNumber {
   clientId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  client      Client   @relation(fields: [clientId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model User {
@@ -75,11 +171,11 @@ model User {
   email     String   @unique
   password  String
   name      String
-  role      String   @default("user")
+  role      String   @default("user") // "admin", "agent", "user"
   clientId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  client    Client   @relation(fields: [clientId], references: [id])
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model ContactConfig {
@@ -89,7 +185,7 @@ model ContactConfig {
   agentDescription  String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  client            Client   @relation(fields: [clientId], references: [id])
+  client            Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model HistoryConfig {
@@ -98,7 +194,7 @@ model HistoryConfig {
   agentDescription String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  client           Client   @relation(fields: [clientId], references: [id])
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model MemoryConfig {
@@ -108,7 +204,7 @@ model MemoryConfig {
   agentDescription String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  client           Client   @relation(fields: [clientId], references: [id])
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model PricingConfig {
@@ -118,7 +214,7 @@ model PricingConfig {
   noPricingInfoText String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  client            Client   @relation(fields: [clientId], references: [id])
+  client            Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model ServicesConfig {
@@ -128,7 +224,7 @@ model ServicesConfig {
   conversationStyle String
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  client            Client   @relation(fields: [clientId], references: [id])
+  client            Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model SmalltalkConfig {
@@ -138,19 +234,23 @@ model SmalltalkConfig {
   agentDescription    String
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
-  client              Client   @relation(fields: [clientId], references: [id])
+  client              Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model EndUser {
-  id        String    @id @default(uuid())
-  clientId  String
-  chatId    String
-  name      String?
-  platform  String?   // "whatsapp", "telegram", "web"
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  client    Client    @relation(fields: [clientId], references: [id])
-  messages  Message[]
+  id          String    @id @default(uuid())
+  clientId    String
+  chatId      String
+  name        String?
+  platform    String?   // "whatsapp", "telegram", "web"
+  isAiPaused  Boolean   @default(false) // For human handoff
+  pausedUntil DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  client      Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  messages    Message[]
+  leads       Lead[]
 
   @@unique([clientId, chatId])
 }
@@ -158,7 +258,7 @@ model EndUser {
 model Message {
   id        String   @id @default(uuid())
   endUserId String
-  role      String   // "user" or "model"
+  role      String   // "user" or "model" or "agent" (for human agent handoff)
   content   String
   createdAt DateTime @default(now())
   endUser   EndUser  @relation(fields: [endUserId], references: [id], onDelete: Cascade)
