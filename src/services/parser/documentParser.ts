@@ -8,15 +8,19 @@ export class DocumentParser {
    * Extrai texto bruto de um buffer com base no tipo de arquivo.
    */
   async extractText(buffer: Buffer, fileType: string): Promise<string> {
+    let rawText = "";
     switch (fileType.toLowerCase()) {
       case "pdf":
-        return this.extractFromPdf(buffer);
+        rawText = await this.extractFromPdf(buffer);
+        break;
       case "txt":
       case "csv":
-        return buffer.toString("utf-8");
       default:
-        return buffer.toString("utf-8");
+        rawText = buffer.toString("utf-8");
+        break;
     }
+    // Remove null bytes (\u0000) that crash PostgreSQL UTF8 encoding
+    return rawText.replace(/\0/g, '');
   }
 
   /**
@@ -25,7 +29,8 @@ export class DocumentParser {
   private async extractFromPdf(buffer: Buffer): Promise<string> {
     try {
       const pdf = require("pdf-parse");
-      const data = await pdf(buffer);
+      const parseFunc = typeof pdf === "function" ? pdf : pdf.PDFParse || pdf.default;
+      const data = await parseFunc(buffer);
       return data.text || "";
     } catch (error: any) {
       console.error("[DocumentParser] Erro ao processar PDF:", error);

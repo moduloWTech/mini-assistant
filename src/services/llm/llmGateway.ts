@@ -26,7 +26,7 @@ interface LLMResponse {
 
 /**
  * Gateway Multi-LLM com Circuit-Breaker e Fallback Automático:
- * 1. Primário: Google Gemini 2.5 Flash (gemini-flash-latest)
+ * 1. Primário: Google Gemini 3.6 Flash (gemini-3.6-flash)
  * 2. Secundário: OpenAI GPT-4o-mini (quando Gemini tiver timeout ou rate limit)
  * 3. Fallback Seguro: Resposta empática de contingência
  */
@@ -66,13 +66,13 @@ export class LLMGateway {
         await chatRepo.saveMessage(endUser.id, "model", geminiResult);
 
         // Registra telemetria de uso
-        await this.logUsage(clientId, channel, "gemini-flash-latest", 100, 50, false, latencyMs);
+        await this.logUsage(clientId, channel, "gemini-3.6-flash", 100, 50, false, latencyMs);
       }
 
       return {
         text: geminiResult,
         provider: "gemini",
-        model: "gemini-flash-latest",
+        model: "gemini-3.6-flash",
         latencyMs
       };
     } catch (geminiError: any) {
@@ -130,7 +130,7 @@ export class LLMGateway {
       throw new Error("GEMINI_API_KEY não configurada.");
     }
 
-    const modelName = "gemini-flash-latest";
+    const modelName = "gemini-3.6-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
 
     const contents = [];

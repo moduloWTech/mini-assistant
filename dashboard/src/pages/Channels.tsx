@@ -87,7 +87,7 @@ export const Channels = () => {
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-slate-300 mb-1">Access Token da Meta</label>
-              <Input type="password" value={waToken} onChange={e => setWaToken(e.target.value)} placeholder="Ex: EAAB..." className="bg-slate-950/50 text-xs" />
+              <Input type="password" data-lpignore="true" autoComplete="off" value={waToken} onChange={e => setWaToken(e.target.value)} placeholder="Ex: EAAB..." className="bg-slate-950/50 text-xs" />
             </div>
             <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1 text-[11px] text-slate-300">
               <p className="font-semibold text-white">Webhook Meta:</p>
@@ -121,16 +121,18 @@ export const Channels = () => {
           <div className="space-y-3">
             <div>
               <label className="block text-[11px] font-semibold text-slate-300 mb-1">BotFather Token</label>
-              <Input value={tgToken} onChange={e => setTgToken(e.target.value)} placeholder="Ex: 123456789:ABC..." className="bg-slate-950/50 text-xs" />
+              <Input data-lpignore="true" autoComplete="off" value={tgToken} onChange={e => setTgToken(e.target.value)} placeholder="Ex: 123456789:ABC..." className="bg-slate-950/50 text-xs" />
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-slate-300 mb-1">URL Pública (Ngrok opcional)</label>
-              <Input value={tgPublicUrl} onChange={e => setTgPublicUrl(e.target.value)} placeholder="Ex: https://dominio.com" className="bg-slate-950/50 text-xs" />
+              <Input data-lpignore="true" autoComplete="off" value={tgPublicUrl} onChange={e => setTgPublicUrl(e.target.value)} placeholder="Ex: https://dominio.com" className="bg-slate-950/50 text-xs" />
             </div>
             {tgVerifyToken && (
               <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300 space-y-1">
                 <p className="font-semibold text-white">Webhook Bot:</p>
-                <p className="font-mono text-[10px] text-sky-300 break-all">{API_BASE}/channels/telegram/{tgVerifyToken}</p>
+                <p className="font-mono text-[10px] text-sky-300 break-all">
+                  {tgPublicUrl ? tgPublicUrl.replace(/\/$/, "") : (import.meta.env.DEV ? 'http://localhost:3000' : window.location.origin)}/channels/telegram/{tgVerifyToken}
+                </p>
               </div>
             )}
             <Button onClick={handleSaveTelegram} className="w-full bg-sky-600 hover:bg-sky-500 text-xs">

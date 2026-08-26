@@ -55,6 +55,6 @@ export async function smalltalkAgent(task: string, chat: string, clientId: strin
     return { message: choice };
   } catch (error) {
     erroAgente(error, "smalltalkAgent");
-    return { message: "Olá! Estou à disposição para ajudar você com todas as dúvidas e informações que precisar." };
+    return { message: "Nossa assistente está passando por melhorias. Em breve ela estará pronta para resolver e tirar suas dúvidas." };
   }
 }

@@ -57,7 +57,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.2.0",
     "openai": "^4.96.0",
-    "pdf-parse": "^2.4.5",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.20.0",
     "pino": "^10.3.1",
     "swagger-jsdoc": "^6.3.0",

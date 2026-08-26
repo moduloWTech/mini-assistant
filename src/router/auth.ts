@@ -95,7 +95,35 @@ authRouter.post("/login", async (req: Request, res: Response) => {
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ message: "Logged in successfully.", token });
+    // Fetch client to return on login
+    const client = await prisma.client.findUnique({
+      where: { id: user.clientId },
+      select: {
+        id: true,
+        name: true,
+        companyName: true,
+        email: true,
+        niche: true,
+        systemPersona: true,
+        whatsappPhoneNumberId: true,
+        telegramBotToken: true,
+        telegramVerifyToken: true,
+        webhookUrl: true,
+        allowedDomains: true,
+        activeTools: true,
+        googleCalendarToken: true,
+        createdAt: true
+      }
+    });
+
+    const clientWithVirtuals = client ? {
+      ...client,
+      hasTelegram: !!client.telegramBotToken,
+      hasWhatsApp: !!client.whatsappPhoneNumberId,
+      hasGoogleCalendar: !!client.googleCalendarToken
+    } : null;
+
+    res.status(200).json({ message: "Logged in successfully.", token, client: clientWithVirtuals });
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ error: "Internal Server Error" });

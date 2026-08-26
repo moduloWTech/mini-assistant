@@ -26,6 +26,7 @@ knowledgeRouter.post("/upload", upload.single("file"), async (req: AuthRequest, 
     return res.status(400).json({ error: "Arquivo e autenticação são obrigatórios." });
   }
 
+  let docSourceId: string | null = null;
   try {
     const fileExt = file.originalname.split(".").pop() || "txt";
     
@@ -39,29 +40,36 @@ knowledgeRouter.post("/upload", upload.single("file"), async (req: AuthRequest, 
         status: "processing"
       }
     });
+    docSourceId = docSource.id;
 
     // 2. Extrai o texto do arquivo
     const rawText = await documentParser.extractText(file.buffer, fileExt);
 
     if (!rawText.trim()) {
       await prisma.documentSource.update({
-        where: { id: docSource.id },
+        where: { id: docSourceId },
         data: { status: "error" }
       });
       return res.status(400).json({ error: "O documento não contém texto legível." });
     }
 
     // 3. Fatiamento, vetorização e salvamento em background
-    const chunkCount = await documentParser.ingestDocument(clientId, docSource.id, rawText, category);
+    const chunkCount = await documentParser.ingestDocument(clientId, docSourceId, rawText, category);
 
     res.status(201).json({
       message: "Documento processado e vetorizado com sucesso.",
-      documentId: docSource.id,
+      documentId: docSourceId,
       fileName: file.originalname,
       chunksCreated: chunkCount
     });
   } catch (error: any) {
     console.error("[KnowledgeRouter] Erro no upload:", error);
+    if (docSourceId) {
+      await prisma.documentSource.update({
+        where: { id: docSourceId },
+        data: { status: "error" }
+      }).catch(() => {});
+    }
     res.status(500).json({ error: `Erro ao processar documento: ${error.message}` });
   }
 });

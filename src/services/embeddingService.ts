@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 /**
- * Gera o vetor (embedding) para um texto específico usando o modelo oficial text-embedding-004 do Gemini.
+ * Gera o vetor (embedding) para um texto específico usando o modelo oficial gemini-embedding-2 do Gemini.
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   const apiKey = process.env.GEMINI_API_KEY || "";
@@ -12,13 +12,11 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const result = await model.embedContent(text);
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-2" });
+    const result = await model.embedContent({ content: { parts: [{ text }], role: "user" }, outputDimensionality: 768 } as any);
     const values = result.embedding.values;
 
     if (values.length !== 768) {
-      console.warn(`[EmbeddingService] Dimensão retornada: ${values.length}. Esperado: 768.`);
-      // Se vier com tamanho diferente, ajusta para 768
       if (values.length > 768) return values.slice(0, 768);
       return [...values, ...new Array(768 - values.length).fill(0)];
     }
@@ -29,7 +27,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     // Tenta fallback com embedding-001
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "embedding-001" });
+      const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
       const result = await model.embedContent(text);
       const values = result.embedding.values;
       if (values.length === 768) return values;
