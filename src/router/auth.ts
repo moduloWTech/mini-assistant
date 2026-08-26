@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { encryptToken } from "../utils/encryption";
+import { ensureClientConfigs } from "../services/ensureClientConfigs";
 
 const authRouter = Router();
 
@@ -48,6 +49,9 @@ authRouter.post("/register", async (req: Request, res: Response) => {
       },
     });
 
+    // Provision default agent configs and persona
+    await ensureClientConfigs(newClient.id, companyName);
+
     // Generate JWT
     const token = jwt.sign(
       { userId: newUser.id, clientId: newClient.id, role: newUser.role },
@@ -80,6 +84,9 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid credentials." });
     }
+
+    // Auto-heal / Ensure configs exist for this tenant
+    await ensureClientConfigs(user.clientId);
 
     // Generate JWT
     const token = jwt.sign(

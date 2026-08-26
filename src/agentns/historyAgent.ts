@@ -3,12 +3,13 @@ import { callGeminiAgent } from '../services/callGeminiAgent';
 import { erroAgente } from '../services/erroAgent';
 import { prisma } from '../DB/prisma.config';
 import { EmbeddingService } from '../services/embeddingService';
+import { ensureClientConfigs } from '../services/ensureClientConfigs';
 
 const repo = new MethodsRepository();
 const embeddingService = new EmbeddingService();
 
 export async function historyAgent(task: string, chat: string, clientId: string, userId: string = "default"): Promise<{ message: string; }> {
-  // 1. FAST-PATH: Checa o Cache Vetorial PRIMEIRO (Zero chamada LLM / RAG)
+  // 1. FAST-PATH: Checa o Cache Vetorial PRIMEIRO
   try {
     const cached = await repo.findSimilarQuestion({ question: task, clientId });
     if (cached) {
@@ -19,16 +20,24 @@ export async function historyAgent(task: string, chat: string, clientId: string,
     console.error("Erro ao checar cache vetorial:", err);
   }
 
-  const config = await prisma.historyConfig.findFirst({
+  let config = await prisma.historyConfig.findFirst({
     where: { clientId },
     include: { client: true }
   });
 
   if (!config || !config.client) {
-    return { message: "Configuração de histórico não encontrada para este cliente." };
+    await ensureClientConfigs(clientId);
+    config = await prisma.historyConfig.findFirst({
+      where: { clientId },
+      include: { client: true }
+    });
   }
 
-  // 2. Busca Semântica (RAG) apenas se não houver no cache
+  const client = config?.client || await prisma.client.findUnique({ where: { id: clientId } });
+  const persona = client?.systemPersona || "Você é um assistente virtual profissional.";
+  const agentDesc = config?.agentDescription || "Especialista na história e valores da empresa.";
+
+  // 2. Busca Semântica (RAG)
   let contextText = "";
   try {
     const queryVector = await embeddingService.generateEmbedding(task);
@@ -39,36 +48,33 @@ export async function historyAgent(task: string, chat: string, clientId: string,
   }
 
   const systemPrompt = `
-    PERSONA: ${config.client.systemPersona || "Você é um assistente profissional."}
+    PERSONA: ${persona}
     
-    INSTRUÇÃO: ${config.agentDescription}
-    - Seu objetivo é responder perguntas de forma amigável, breve e natural.
-    - Responda baseando-se no CONTEXTO RECUPERADO abaixo, mas sempre mantendo sua PERSONA e princípios fundamentais.
-    - Se a informação não estiver no contexto, use sua persona para explicar educadamente que não possui essa informação específica.
+    INSTRUÇÃO: ${agentDesc}
+    - Seu objetivo é responder perguntas sobre nossa empresa e história de forma amigável e clara.
     
-    CONTEXTO RECUPERADO:
-    ${contextText || "Nenhuma informação específica encontrada no banco de dados."}
+    BASE DE CONHECIMENTO DISPONÍVEL:
+    ${contextText || "Explique nossa trajetória e compromisso com excelência."}
   `;
 
-  const userPrompt = `Tarefa/Pergunta: "${task}"`;
-  
-  try { 
+  const userPrompt = `Pergunta do usuário: "${task}"`;
+
+  try {
     const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId);
-   
+
     if (!choice || choice.length === 0) {
-      return { message: "Desculpe, não consegui processar sua pergunta. Tente algo diferente!" };
+      return { message: "Nossa empresa é dedicada a entregar as melhores soluções com transparência e inovação." };
     }
 
-    // 3. Salva a pergunta e a resposta no banco
-    await repo.saveToDatabase({
+    repo.saveToDatabase({
       clientId,
       question: chat ? chat : "",
       response: choice, 
-    });
-
+    }).catch(e => console.error("Erro ao salvar cache em background:", e));
+    
     return { message: choice };
   } catch (error) {
     erroAgente(error, "historyAgent");
-    return { message: "Poxa, não consegui entender direito agora sobre a história. Você pode tentar perguntar de outro jeito?" };
+    return { message: "Desculpe, tive um problema ao buscar essas informações no momento." };
   }
 }

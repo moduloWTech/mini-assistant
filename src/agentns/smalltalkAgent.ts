@@ -2,28 +2,35 @@ import { MethodsRepository } from '../repository/methods.repository';
 import { callGeminiAgent } from '../services/callGeminiAgent';
 import { erroAgente } from '../services/erroAgent';
 import { prisma } from '../DB/prisma.config';
+import { ensureClientConfigs } from '../services/ensureClientConfigs';
 
 const repo = new MethodsRepository();
 
 export async function smalltalkAgent(task: string, chat: string, clientId: string, userId: string = "default"): Promise<{ message: string; }> {
-
-  const config = await prisma.smalltalkConfig.findFirst({
+  let config = await prisma.smalltalkConfig.findFirst({
     where: { clientId },
     include: { client: true }
   });
 
   if (!config || !config.client) {
-    return { message: "Configuração de smalltalk não encontrada para este cliente." };
+    await ensureClientConfigs(clientId);
+    config = await prisma.smalltalkConfig.findFirst({
+      where: { clientId },
+      include: { client: true }
+    });
   }
 
-  const historyText = config.smalltalkGuidelines;
+  const client = config?.client || await prisma.client.findUnique({ where: { id: clientId } });
+  const persona = client?.systemPersona || "Você é um assistente virtual profissional e acolhedor.";
+  const agentDesc = config?.agentDescription || "Assistente cordial e prestativo.";
+  const guidelines = config?.smalltalkGuidelines || "Responda de forma breve, amigável e natural.";
 
   const systemPrompt = `
-    PERSONA: ${config.client.systemPersona || "Você é um assistente profissional."}
+    PERSONA: ${persona}
 
-    INSTRUÇÃO: ${config.agentDescription}
-    - Diretrizes de Conversa: ${config.smalltalkGuidelines}
-    - Responda de forma breve, amigável e natural.
+    INSTRUÇÃO: ${agentDesc}
+    - Diretrizes de Conversa: ${guidelines}
+    - Responda de forma breve, amigável e natural em português.
   `;
 
   const userPrompt = `Pergunta casual do usuário: "${task}"`;
@@ -32,13 +39,13 @@ export async function smalltalkAgent(task: string, chat: string, clientId: strin
     const cached = await repo.findSimilarQuestion({ question: task, clientId });
     if (cached) return { message: cached.response };
 
-    const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId)
+    const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId);
 
     if (!choice || choice.length === 0) {
-      return { message: "Parece que houve um erro. Pode tentar novamente? Eu estou aqui para ajudar!" };
+      return { message: "Olá! Como posso ajudar você hoje?" };
     }
 
-    // 3. Salva a pergunta e a resposta no banco em segundo plano (não trava a resposta)
+    // Salva a pergunta e a resposta no banco em segundo plano
     repo.saveToDatabase({
       clientId,
       question: chat ? chat : "",
@@ -48,6 +55,6 @@ export async function smalltalkAgent(task: string, chat: string, clientId: strin
     return { message: choice };
   } catch (error) {
     erroAgente(error, "smalltalkAgent");
-    return { message: "Oi, aqui é a Keiko. Estou com alguns problemas em meu servidor, mas já estamos tentando resolver. Jája estarei operacional e pronta para responder todas as suas questões." };
+    return { message: "Olá! Estou à disposição para ajudar você com todas as dúvidas e informações que precisar." };
   }
 }

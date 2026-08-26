@@ -35,8 +35,8 @@ const openCors = cors({ origin: "*" });
 // 🎨 Favicon Handler (Evita 404 no browser)
 app.get("/favicon.ico", (req, res) => res.status(204).end());
 
-// 🖥️ Servir o Dashboard Administrativo Estático
-const dashboardPath = path.join(__dirname, "../dashboard");
+// 🖥️ Servir o Dashboard Administrativo Estático (Vite Build)
+const dashboardPath = path.join(__dirname, "../dashboard/dist");
 app.use("/dashboard", express.static(dashboardPath));
 app.get("/", (req, res) => {
   res.sendFile(path.join(dashboardPath, "index.html"));

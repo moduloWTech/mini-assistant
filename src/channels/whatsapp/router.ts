@@ -6,6 +6,8 @@ const whatsappRouter = Router();
 
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || "verify_token_dev";
 
+// --- META CLOUD API OFFICIAL ENDPOINTS ---
+
 // GET /webhook/whatsapp - Verificação de Webhook da Meta
 whatsappRouter.get("/whatsapp", (req: Request, res: Response) => {
   const mode = req.query["hub.mode"];
@@ -70,55 +72,6 @@ whatsappRouter.post("/whatsapp", async (req: Request, res: Response) => {
     console.error("Erro ao processar mensagem do WhatsApp:", error);
     res.sendStatus(200);
   }
-});
-
-// POST /webhook/whatsapp/qr-webhook - Recebimento de mensagens via QR Code (Evolution API / Baileys)
-whatsappRouter.post("/qr-webhook", async (req: Request, res: Response) => {
-  const { data, instance, sender } = req.body;
-  
-  try {
-    const messageText = data?.message?.conversation || data?.message?.extendedTextMessage?.text || req.body.text || "";
-    const fromNumber = (sender || req.body.from || "").replace(/\D/g, "");
-    const instanceName = instance || req.body.instanceName;
-
-    if (!messageText || !fromNumber) {
-      return res.sendStatus(200);
-    }
-
-    console.log(`[WhatsApp QR Code API] Mensagem de ${fromNumber} na instância ${instanceName}: ${messageText}`);
-
-    // Busca o cliente pelo ID da empresa ou nome da instância
-    const client = await prisma.client.findFirst();
-    if (client) {
-      await messageQueue.add("whatsapp-message", {
-        channel: "whatsapp",
-        phoneNumberId: instanceName || "qr_instance",
-        from: fromNumber,
-        text: messageText,
-        clientId: client.id,
-        name: data?.pushName || "Cliente WhatsApp"
-      });
-    }
-
-    res.status(200).json({ success: true });
-  } catch (error) {
-    console.error("[WhatsApp QR] Erro ao processar webhook QR:", error);
-    res.sendStatus(200);
-  }
-});
-
-// GET /webhook/whatsapp/qr-status - Status da conexão QR Code
-whatsappRouter.get("/qr-status/:clientId", async (req: Request, res: Response) => {
-  const { clientId } = req.params;
-  
-  // Retorna status simulado/ativo de conexão
-  res.status(200).json({
-    connected: true,
-    instanceName: `instance_${clientId}`,
-    status: "open",
-    phone: "+55 (98) 98506-6966",
-    profileName: "Atendimento IA"
-  });
 });
 
 export { whatsappRouter };

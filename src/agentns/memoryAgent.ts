@@ -2,25 +2,34 @@ import { MethodsRepository } from '../repository/methods.repository';
 import { callGeminiAgent } from '../services/callGeminiAgent';
 import { erroAgente } from '../services/erroAgent';
 import { prisma } from '../DB/prisma.config';
+import { ensureClientConfigs } from '../services/ensureClientConfigs';
 
 const repo = new MethodsRepository();
 
 export async function memoryAgent(task: string, chat: string, clientId: string, userId: string = "default"): Promise<{ message: string; }> {
-
-  const config = await prisma.memoryConfig.findFirst({
+  let config = await prisma.memoryConfig.findFirst({
     where: { clientId },
     include: { client: true }
   });
 
   if (!config || !config.client) {
-    return { message: "Configuração de memória não encontrada para este cliente." };
+    await ensureClientConfigs(clientId);
+    config = await prisma.memoryConfig.findFirst({
+      where: { clientId },
+      include: { client: true }
+    });
   }
 
-  const systemPrompt = `
-    PERSONA: ${config.client.systemPersona || "Você é um assistente profissional."}
+  const client = config?.client || await prisma.client.findUnique({ where: { id: clientId } });
+  const persona = client?.systemPersona || "Você é um assistente virtual profissional.";
+  const agentDesc = config?.agentDescription || "Responsável por manter o contexto da conversa.";
+  const memoryGuidelines = config?.memoryGuidelines || "Considere as mensagens anteriores do usuário.";
 
-    INSTRUÇÃO: ${config.agentDescription}
-    - Diretrizes de Memória: ${config.memoryGuidelines}
+  const systemPrompt = `
+    PERSONA: ${persona}
+
+    INSTRUÇÃO: ${agentDesc}
+    - Diretrizes de Memória: ${memoryGuidelines}
     - Responda de forma breve, amigável e natural.
   `;
 
@@ -30,25 +39,20 @@ export async function memoryAgent(task: string, chat: string, clientId: string, 
     const cached = await repo.findSimilarQuestion({ question: task, clientId });
     if (cached) return { message: cached.response };
 
-    const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId)
+    const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId);
     if (!choice || choice.length === 0) {
-      return { message: "Parece que houve um erro. Pode tentar novamente? Eu estou aqui para ajudar!" };
+      return { message: "Entendido! Como posso ajudar você agora?" };
     }
 
-    // 3. Salva a pergunta e a resposta no banco
-    await repo.saveToDatabase({
+    repo.saveToDatabase({
       clientId,
       question: chat ? chat : "",
       response: choice, 
-    });
+    }).catch(e => console.error("Erro ao salvar cache em background:", e));
 
     return { message: choice };
   } catch (error) {
     erroAgente(error, "memoryAgent");
-    const respostasAlternativas = [
-      "Poxa, não lembro exatamente agora 😅, mas se você puder me lembrar, fico feliz!",
-      "Não consigo lembrar exatamente disso no momento, mas me conta um pouco mais e eu te ajudo!",
-    ];
-    return { message: respostasAlternativas[Math.floor(Math.random() * respostasAlternativas.length)] };
+    return { message: "Compreendido! Estou à disposição para prosseguir." };
   }
 }

@@ -3,12 +3,13 @@ import { callGeminiAgent } from '../services/callGeminiAgent';
 import { erroAgente } from '../services/erroAgent';
 import { prisma } from '../DB/prisma.config';
 import { EmbeddingService } from '../services/embeddingService';
+import { ensureClientConfigs } from '../services/ensureClientConfigs';
 
 const repo = new MethodsRepository();
 const embeddingService = new EmbeddingService();
 
 export async function pricingAgent(task: string, chat: string, clientId: string, userId: string = "default"): Promise<{ message: string; }> {
-  // 1. FAST-PATH: Checa o Cache Vetorial PRIMEIRO (Zero chamada LLM / RAG)
+  // 1. FAST-PATH: Checa o Cache Vetorial PRIMEIRO
   try {
     const cached = await repo.findSimilarQuestion({ question: task, clientId });
     if (cached) {
@@ -19,16 +20,25 @@ export async function pricingAgent(task: string, chat: string, clientId: string,
     console.error("Erro ao checar cache vetorial:", err);
   }
 
-  const config = await prisma.pricingConfig.findFirst({
+  let config = await prisma.pricingConfig.findFirst({
     where: { clientId },
     include: { client: true }
   });
 
   if (!config || !config.client) {
-    return { message: "Configuração de precificação não encontrada para este cliente." };
+    await ensureClientConfigs(clientId);
+    config = await prisma.pricingConfig.findFirst({
+      where: { clientId },
+      include: { client: true }
+    });
   }
 
-  // 2. Busca Semântica (RAG) apenas se não houver no cache
+  const client = config?.client || await prisma.client.findUnique({ where: { id: clientId } });
+  const persona = client?.systemPersona || "Você é um assistente virtual especializado em planos e preços.";
+  const agentDesc = config?.agentDescription || "Especialista em planos e condições comerciais.";
+  const noPricingInfoText = config?.noPricingInfoText || "Caso não encontre os valores exatos, convide o cliente a falar com nossos especialistas.";
+
+  // 2. Busca Semântica (RAG)
   let contextText = "";
   try {
     const queryVector = await embeddingService.generateEmbedding(task);
@@ -39,34 +49,33 @@ export async function pricingAgent(task: string, chat: string, clientId: string,
   }
 
   const systemPrompt = `
-    PERSONA: ${config.client.systemPersona || "Você é um assistente profissional especializado em preços."}
+    PERSONA: ${persona}
 
-    INSTRUÇÃO: ${config.agentDescription}
-    - Instrução Adicional: ${config.noPricingInfoText}
-    - Responda baseando-se no CONTEXTO abaixo, mas sempre mantendo sua PERSONA e diretrizes da empresa. Se não encontrar o preço, siga a instrução adicional.
+    INSTRUÇÃO: ${agentDesc}
+    - Instrução Adicional: ${noPricingInfoText}
     
-    CONTEXTO:
-    ${contextText || "Nenhuma tabela de preços encontrada."}
+    BASE DE CONHECIMENTO DISPONÍVEL:
+    ${contextText || "Apresente nossos planos e ofereça atendimento personalizado."}
   `;
 
-  const userPrompt = `Tarefa/Pergunta: "${task}"`;
-  
-  try { 
+  const userPrompt = `Pergunta sobre preços: "${task}"`;
+
+  try {
     const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId);
+
     if (!choice || choice.length === 0) {
-      return { message: "Parece que houve um erro. Pode tentar novamente? Eu estou aqui para ajudar!" };
+      return { message: "Trabalhamos com planos personalizados sob medida para o seu perfil. Gostaria de receber uma proposta?" };
     }
 
-    // 3. Salva a pergunta e a resposta no cache vetorial
-    await repo.saveToDatabase({
+    repo.saveToDatabase({
       clientId,
       question: chat ? chat : "",
       response: choice, 
-    });
+    }).catch(e => console.error("Erro ao salvar cache em background:", e));
     
     return { message: choice };
   } catch (error) {
     erroAgente(error, "pricingAgent");
-    return { message: "Posso fazer um orçamento com base no seu projeto! Preencha o formulário no site e logo entro em contato 😉" };
+    return { message: "Desculpe, tive uma oscilação na consulta de planos. Fale com nosso suporte para receber a tabela completa!" };
   }
 }

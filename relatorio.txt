@@ -1,0 +1,12 @@
+relatorio:
+  1. percebi que ao criar a conta a notificação de conta criada foi feita por um alert. Isso quebra a profissionalidade do sistema. É preciso criar um componente para servir
+  esses feedbacks para o usuário. Esse componente deve ser usado em todo o sistema e assim não quebrar a base mais forte do react que é a componentização.
+  2. O sistema diz para colar uma tag para ativar um chat flutuante na visao geral e oferece um botão que leva ate hub de canais. Ok, isso esta perfeito, porém em hub de canais
+  em chat no site (widget) aparece um imput. Veja, se é para adicionar uma tag no site do usuario, porque desse imput, ficou meio sem sentido e não sei o que adicionar no imput.
+  3. Ainda em hub de canais em WhatsApp Business aparece um qrcode generioco que não acontece nada ao apontar com a autenticação do whatsapp. Precisa verificar a lib que esta
+  sendo usada e corrigir. Verifique se o banco de dados esta preparado para isso tambem 
+4. eu apliquei o token no telegram e o token foi salvo mas não surtiu efeito algum
+5.Em Personalidade & Diretrizes do Assistente, eu preenchi a missao e tom de voz da agente e mesmo assim não funcionou. Testei o simulador de conversas e nada aconteceu. Nem uma resposta
+6. testei Web Scraper de URLs (Site / FAQ), a menssagem diz que foi vetorizado mas acredito que nada tenha sido salvo
+7. Google Calendar (Agendamentos) este parece esta mokado, não temos ainda este componente funcionando.
+8. planos e faturamento ainda estag mokado tambem porem este deixamos para depois

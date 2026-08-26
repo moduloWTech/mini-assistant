@@ -2,26 +2,35 @@ import { MethodsRepository } from '../repository/methods.repository';
 import { callGeminiAgent } from '../services/callGeminiAgent';
 import { erroAgente } from '../services/erroAgent';
 import { prisma } from '../DB/prisma.config';
+import { ensureClientConfigs } from '../services/ensureClientConfigs';
 
 const repo = new MethodsRepository();
 
 export async function contactAgent(task: string, chat: string, clientId: string, userId: string = "default"): Promise<{ message: string; }> {
-
-  const config = await prisma.contactConfig.findFirst({
+  let config = await prisma.contactConfig.findFirst({
     where: { clientId },
     include: { client: true }
   });
 
   if (!config || !config.client) {
-    return { message: "Configuração de contato não encontrada para este cliente." };
+    await ensureClientConfigs(clientId);
+    config = await prisma.contactConfig.findFirst({
+      where: { clientId },
+      include: { client: true }
+    });
   }
 
-  const systemPrompt = `
-    PERSONA: ${config.client.systemPersona || "Você é um assistente profissional."}
+  const client = config?.client || await prisma.client.findUnique({ where: { id: clientId } });
+  const persona = client?.systemPersona || "Você é um assistente virtual profissional.";
+  const agentDesc = config?.agentDescription || "Especialista em suporte e direcionamento de contato.";
+  const suggestion = config?.contactSuggestion || "Solicite os dados do cliente para que nossa equipe entre em contato.";
 
-    INSTRUÇÃO: ${config.agentDescription}
+  const systemPrompt = `
+    PERSONA: ${persona}
+
+    INSTRUÇÃO: ${agentDesc}
     - Responda de forma breve, amigável e natural.
-    - Sugestão de Contato/CTA: ${config.contactSuggestion}
+    - Sugestão de Contato/CTA: ${suggestion}
   `;
 
   const userPrompt = `Tarefa/Pergunta: "${task}"`;
@@ -30,22 +39,21 @@ export async function contactAgent(task: string, chat: string, clientId: string,
     const cached = await repo.findSimilarQuestion({ question: task, clientId });
     if (cached) return { message: cached.response };
 
-    const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId)
+    const choice = await callGeminiAgent(systemPrompt, userPrompt, clientId, userId);
    
     if (!choice || choice.length === 0) {
-      return { message: "Desculpe, não consegui processar sua pergunta. Tente algo diferente!" };
+      return { message: "Você pode nos contatar diretamente deixando seu e-mail ou telefone por aqui!" };
     }
 
-    // 3. Salva a pergunta e a resposta no banco
-    await repo.saveToDatabase({
+    repo.saveToDatabase({
       clientId,
       question: chat ? chat : "",
       response: choice, 
-    });
+    }).catch(e => console.error("Erro ao salvar cache em background:", e));
     
     return { message: choice };
   } catch (error) {
     erroAgente(error, "contactAgent");
-    return { message: "Poxa, não consegui entender direito agora. Você pode tentar perguntar de outro jeito?" };
+    return { message: "Você pode deixar seu contato por aqui que retornaremos em breve!" };
   }
 }

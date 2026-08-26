@@ -5,11 +5,11 @@ import { prisma } from "../DB/prisma.config";
  * Middleware para validar se a requisição do Web Widget veio de um domínio autorizado pelo cliente.
  */
 export const validateWidgetDomain = async (req: Request, res: Response, next: NextFunction) => {
-  const { clientId } = req.body;
+  const { clientId, userId } = req.body;
   const origin = req.get("origin") || req.get("referer");
 
-  // Se não foi informado clientId, deixa o controller lidar com o erro 400
-  if (!clientId) {
+  // Requisições do Sandbox interno ou sem clientId passam para o controller
+  if (!clientId || userId === "sandbox_user") {
     return next();
   }
 
@@ -28,17 +28,23 @@ export const validateWidgetDomain = async (req: Request, res: Response, next: Ne
       : ["*"];
 
     // Se permite qualquer domínio ("*"), libera
-    if (allowedDomains.includes("*")) {
+    if (allowedDomains.includes("*") || allowedDomains.length === 0) {
       return next();
     }
 
     if (!origin) {
-      return next(); // Requisição direta (ex: Postman/Server-to-Server)
+      return next(); // Requisição direta (Postman / Server-to-Server)
     }
 
     const originHostname = new URL(origin).hostname;
+
+    // Sempre permite conexões vindas do próprio localhost em desenvolvimento
+    if (originHostname === "localhost" || originHostname === "127.0.0.1") {
+      return next();
+    }
+
     const isAllowed = allowedDomains.some((domain) => {
-      const cleanDomain = domain.replace(/^https?:\/\//, "").split("/")[0];
+      const cleanDomain = domain.replace(/^https?:\/\//, "").split("/")[0].split(":")[0];
       return originHostname === cleanDomain || originHostname.endsWith(`.${cleanDomain}`);
     });
 
