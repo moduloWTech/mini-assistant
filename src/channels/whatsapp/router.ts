@@ -65,6 +65,12 @@ whatsappRouter.post("/whatsapp", async (req: Request, res: Response) => {
       text,
       clientId: client.id,
       name
+    }, {
+      attempts: 5,
+      backoff: {
+        type: 'exponential',
+        delay: 5000
+      }
     });
 
     res.sendStatus(200);

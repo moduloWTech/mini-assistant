@@ -4,7 +4,7 @@ import { ChatMemoryRepository } from "../repository/chatMemory.repository";
 
 const chatRepo = new ChatMemoryRepository();
 
-export const callGeminiAgent = async (systemPrompt: string, userPrompt: string, clientId: string, userId: string = "default") => {
+export const callGeminiAgent = async (systemPrompt: string, userPrompt: string, clientId: string, userId: string = "default", saveHistory: boolean = true) => {
   checkEnvironmentVariable();
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
@@ -13,16 +13,18 @@ export const callGeminiAgent = async (systemPrompt: string, userPrompt: string, 
   const endUser = await chatRepo.findOrCreateEndUser(clientId, userId, "unknown");
 
   try {
-    // IMPORTANTE: Modelo homologado e testado. Não alterar.
-    const modelName = "gemini-3.6-flash";
+    // IMPORTANTE: Modelo alterado para 3.5-flash devido ao limite diário do 3.6 e indisponibilidade do 2.5
+    const modelName = "gemini-3.5-flash";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
 
     const contents = [];
 
-    // 2. Injeta o histórico recente (Janela otimizada de 5 mensagens para economizar tokens)
-    const recentHistory = await chatRepo.getRecentMessages(endUser.id, 5);
-    for (const msg of recentHistory) {
-      contents.push({ role: msg.role, parts: [{ text: msg.content }] });
+    // 2. Injeta o histórico recente (apenas se for uma chamada que salva histórico)
+    if (saveHistory) {
+      const recentHistory = await chatRepo.getRecentMessages(endUser.id, 5);
+      for (const msg of recentHistory) {
+        contents.push({ role: msg.role, parts: [{ text: msg.content }] });
+      }
     }
 
     // 3. Injeta o prompt atual
@@ -46,7 +48,7 @@ export const callGeminiAgent = async (systemPrompt: string, userPrompt: string, 
     const choice = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // 4. Salva a interação no histórico longo (Banco de Dados)
-    if (choice) {
+    if (choice && saveHistory) {
       await chatRepo.saveMessage(endUser.id, "user", userPrompt);
       await chatRepo.saveMessage(endUser.id, "model", choice);
     }

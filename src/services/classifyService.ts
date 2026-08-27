@@ -14,7 +14,7 @@ export const classifyTask = async (task: string, clientId: string): Promise<stri
     const systemPrompt = 'Você é um classificador de tarefas. Responda apenas com a categoria.';
     const userPrompt = `${prompt}\n\nMensagem a classificar: "${task}"`;
 
-    const category = await callGeminiAgent(systemPrompt, userPrompt, clientId);
+    const category = await callGeminiAgent(systemPrompt, userPrompt, clientId, "classifier-internal", false);
 
     if (!category) {
       return 'other';

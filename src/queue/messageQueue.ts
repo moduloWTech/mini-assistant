@@ -52,7 +52,13 @@ const worker = new Worker('incoming-messages', async (job: Job<MessageJobData>) 
         console.error(`[Queue] Erro ao processar job ${job.id}:`, error);
         throw error; // Will be retried by BullMQ if configured
     }
-}, { connection: connection as any });
+}, { 
+    connection: connection as any,
+    limiter: {
+        max: 8, // Limita a 8 jobs por minuto (16 requisições na API do Google)
+        duration: 60000 // 60 segundos
+    }
+});
 
 worker.on('completed', job => {
     console.log(`[Queue] Job ${job.id} concluído com sucesso.`);

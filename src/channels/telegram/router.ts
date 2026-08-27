@@ -44,6 +44,12 @@ telegramRouter.post("/:verifyToken", async (req: Request, res: Response) => {
       text,
       clientId: client.id,
       name
+    }, {
+      attempts: 5,
+      backoff: {
+        type: 'exponential',
+        delay: 5000 // Inicia esperando 5s, depois 10s, 20s...
+      }
     });
 
     res.sendStatus(200);

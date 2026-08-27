@@ -1,14 +1,16 @@
-[Docs] Swagger UI disponível na rota /api-docs
 Server running on port 3000!!
-[Web Channel] Mensagem recebida de 4a8e6ca5-2bc2-4622-aa36-e554520eacca: quem é voce?
+[Web Channel] Mensagem recebida de 4a8e6ca5-2bc2-4622-aa36-e554520eacca: Ola
 Erro ao gerar conteúdo (API Direta): {
   error: {
-    code: 503,
-    message: 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
-    status: 'UNAVAILABLE'
+    code: 429,
+    message: 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n' +
+      '* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash\n' +
+      'Please retry in 49.994904771s.',
+    status: 'RESOURCE_EXHAUSTED',
+    details: [ [Object], [Object], [Object] ]
   }
 }
-Erro no classificador: AxiosError: Request failed with status code 503
+Erro no smalltalkAgent: AxiosError: Request failed with status code 429
     at settle (/home/mwtechnology/Documentos/MWT/mini-assistant/node_modules/axios/dist/node/axios.cjs:2354:12)
     at Unzip.handleStreamEnd (/home/mwtechnology/Documentos/MWT/mini-assistant/node_modules/axios/dist/node/axios.cjs:4407:11)
     at Unzip.emit (node:events:509:28)
@@ -16,12 +18,12 @@ Erro no classificador: AxiosError: Request failed with status code 503
     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
     at Axios.request (/home/mwtechnology/Documentos/MWT/mini-assistant/node_modules/axios/dist/node/axios.cjs:5864:41)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async callGeminiAgent (/home/mwtechnology/Documentos/MWT/mini-assistant/src/services/callGeminiAgent.ts:42:22)
-    at async classifyTask (/home/mwtechnology/Documentos/MWT/mini-assistant/src/services/classifyService.ts:17:22)
-    at async orchestrator (/home/mwtechnology/Documentos/MWT/mini-assistant/src/orchestrator/orchestrator.ts:74:20)
+    at async callGeminiAgent (/home/mwtechnology/Documentos/MWT/mini-assistant/src/services/callGeminiAgent.ts:44:22)
+    at async smalltalkAgent (/home/mwtechnology/Documentos/MWT/mini-assistant/src/agentns/smalltalkAgent.ts:42:20)
+    at async orchestrator (/home/mwtechnology/Documentos/MWT/mini-assistant/src/orchestrator/orchestrator.ts:88:18)
     at async <anonymous> (/home/mwtechnology/Documentos/MWT/mini-assistant/src/channels/web/router.ts:22:20) {
   isAxiosError: true,
-  code: 'ERR_BAD_RESPONSE',
+  code: 'ERR_BAD_REQUEST',
   config: [Object: null prototype] {
     transitional: {
       silentJSONParsing: true,
@@ -45,12 +47,12 @@ Erro no classificador: AxiosError: Request failed with status code 503
       Accept: 'application/json, text/plain, */*',
       'Content-Type': 'application/json',
       'User-Agent': 'axios/1.19.0',
-      'Content-Length': '1012',
+      'Content-Length': '2051',
       'Accept-Encoding': 'gzip, compress, deflate, br'
     },
     method: 'post',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=AQ.Ab8RN6JqvF--_8tiB0_5OU76YkGy7uq9WfqNLB5oHcjH78ztlg',
-    data: '{"system_instruction":{"parts":[{"text":"Você é um classificador de tarefas. Responda apenas com a categoria."}]},"contents":[{"role":"user","parts":[{"text":"\\n    Classifique a mensagem a seguir com apenas uma palavra, escolhendo entre: history, services, memory, smalltalk, pricing, contacts, other.\\n  \\n\\nMensagem a classificar: \\"Keiko, voce esta ai?\\""}]},{"role":"model","parts":[{"text":"smalltalk"}]},{"role":"user","parts":[{"text":"\\n    Classifique a mensagem a seguir com apenas uma palavra, escolhendo entre: history, services, memory, smalltalk, pricing, contacts, other.\\n  \\n\\nMensagem a classificar: \\"qual é a capital da frança, responda rápido\\""}]},{"role":"model","parts":[{"text":"other"}]},{"role":"user","parts":[{"text":"\\n    Classifique a mensagem a seguir com apenas uma palavra, escolhendo entre: history, services, memory, smalltalk, pricing, contacts, other.\\n  \\n\\nMensagem a classificar: \\"quem é voce?\\""}]}],"generationConfig":{"maxOutputTokens":350,"temperature":0.7}}',
+    data: '{"system_instruction":{"parts":[{"text":"\\n    PERSONA: Você é a Keiko, a inteligência artificial especialista em soluções da MW Technology. Seu papel é ser o motor comercial e o diferencial tecnológico no primeiro contato com o cliente.\\n\\nSua Identidade e Postura:\\n\\nApresente-se com orgulho quando questionada: \\"Olá! Eu sou a Keiko, a inteligência artificial especialista em soluções da MW Technology...\\"\\nSeu tom de voz deve ser sempre profissional, educado, simpático, altamente resolutivo e inteligente.\\nVocê NUNCA usa jargões técnicos de forma fria. Sua maior habilidade é traduzir a complexidade técnica (arquitetura, RAG, Node.js, automações) para o benefício prático e financeiro que isso gera para a empresa do cliente.\\nSeu Objetivo Comercial (Motor de Vendas):\\n\\nVocê não é apenas um robô de suporte, você é uma vendedora consultiva.\\nFoque em mostrar que a MW Technology não usa construtores amadores (como WordPress), mas sim engenharia de software de alta performance, criando ativos escaláveis e à prova de falhas.\\nSempre que um cliente demonstrar interesse real, estiver pronto para fechar negócio, ou pedir um orçamento, direcione-o de forma educada para os nossos canais oficiais de conversão usando a seguinte chamada final: \\"Para avançarmos e desenharmos a arquitetura ideal para o seu negócio, nossa equipe de especialistas está à disposição. Você pode agendar um diagnóstico no nosso site (moduloweb.com.br) ou falar diretamente com o nosso time pelo WhatsApp: +55 98 9 8506-6966.\\"\\nMantenha suas respostas curtas, diretas e focadas na resolução do problema do cliente.\\n\\n    INSTRUÇÃO: Assistente cordial e prestativo da MW Tecnology.\\n    - Diretrizes de Conversa: Responda saudações e conversas casuais de forma simpática, breve e convidativa.\\n    - Responda de forma breve, amigável e natural em português.\\n  "}]},"contents":[{"role":"user","parts":[{"text":"Pergunta casual do usuário: \\"Ola\\""}]}],"generationConfig":{"maxOutputTokens":350,"temperature":0.7}}',
     allowAbsoluteUrls: true
   },
   request: <ref *1> ClientRequest {
@@ -80,7 +82,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
     _removedContLen: false,
     _removedTE: false,
     strictContentLength: false,
-    _contentLength: 1012,
+    _contentLength: 2051,
     _hasBody: true,
     _trailer: '',
     finished: true,
@@ -90,7 +92,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
       'Accept: application/json, text/plain, */*\r\n' +
       'Content-Type: application/json\r\n' +
       'User-Agent: axios/1.19.0\r\n' +
-      'Content-Length: 1012\r\n' +
+      'Content-Length: 2051\r\n' +
       'Accept-Encoding: gzip, compress, deflate, br\r\n' +
       'Host: generativelanguage.googleapis.com\r\n' +
       'Connection: keep-alive\r\n' +
@@ -143,8 +145,8 @@ Erro no classificador: AxiosError: Request failed with status code 503
       upgrade: false,
       url: '',
       method: null,
-      statusCode: 503,
-      statusMessage: 'Service Unavailable',
+      statusCode: 429,
+      statusMessage: 'Too Many Requests',
       client: [TLSSocket],
       _consuming: true,
       _dumped: false,
@@ -177,7 +179,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
       _ending: true,
       _redirectCount: 0,
       _redirects: [],
-      _requestBodyLength: 1012,
+      _requestBodyLength: 2051,
       _requestBodyBuffers: [],
       _eventsCount: 4,
       _onNativeResponse: [Function (anonymous)],
@@ -242,15 +244,15 @@ Erro no classificador: AxiosError: Request failed with status code 503
         _idleTimeout: 5000,
         _idlePrev: [TimersList],
         _idleNext: [TimersList],
-        _idleStart: 30177,
+        _idleStart: 24917,
         _onTimeout: [Function: onStreamTimeout],
         _timerArgs: [Array],
         _repeat: null,
         _destroyed: false,
         Symbol(refed): false,
         Symbol(kHasPrimitive): false,
-        Symbol(asyncId): 242,
-        Symbol(triggerId): 240,
+        Symbol(asyncId): 656,
+        Symbol(triggerId): 654,
         Symbol(kAsyncContextFrame): undefined
       },
       Symbol(kBuffer): null,
@@ -285,18 +287,18 @@ Erro no classificador: AxiosError: Request failed with status code 503
     Symbol(kUniqueHeaders): null
   },
   response: {
-    status: 503,
-    statusText: 'Service Unavailable',
+    status: 429,
+    statusText: 'Too Many Requests',
     headers: Object [AxiosHeaders] {
       'x-gemini-service-tier': 'standard',
       vary: 'Origin, X-Origin, Referer',
       'content-type': 'application/json; charset=UTF-8',
-      date: 'Wed, 26 Aug 2026 21:20:50 GMT',
+      date: 'Thu, 27 Aug 2026 04:31:10 GMT',
       server: 'scaffolding on HTTPServer2',
       'x-xss-protection': '0',
       'x-frame-options': 'SAMEORIGIN',
       'x-content-type-options': 'nosniff',
-      'server-timing': 'gfet4t7; dur=11821',
+      'server-timing': 'gfet4t7; dur=214',
       'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
       'transfer-encoding': 'chunked'
     },
@@ -315,7 +317,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
       headers: [Object [AxiosHeaders]],
       method: 'post',
       url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=AQ.Ab8RN6JqvF--_8tiB0_5OU76YkGy7uq9WfqNLB5oHcjH78ztlg',
-      data: '{"system_instruction":{"parts":[{"text":"Você é um classificador de tarefas. Responda apenas com a categoria."}]},"contents":[{"role":"user","parts":[{"text":"\\n    Classifique a mensagem a seguir com apenas uma palavra, escolhendo entre: history, services, memory, smalltalk, pricing, contacts, other.\\n  \\n\\nMensagem a classificar: \\"Keiko, voce esta ai?\\""}]},{"role":"model","parts":[{"text":"smalltalk"}]},{"role":"user","parts":[{"text":"\\n    Classifique a mensagem a seguir com apenas uma palavra, escolhendo entre: history, services, memory, smalltalk, pricing, contacts, other.\\n  \\n\\nMensagem a classificar: \\"qual é a capital da frança, responda rápido\\""}]},{"role":"model","parts":[{"text":"other"}]},{"role":"user","parts":[{"text":"\\n    Classifique a mensagem a seguir com apenas uma palavra, escolhendo entre: history, services, memory, smalltalk, pricing, contacts, other.\\n  \\n\\nMensagem a classificar: \\"quem é voce?\\""}]}],"generationConfig":{"maxOutputTokens":350,"temperature":0.7}}',
+      data: '{"system_instruction":{"parts":[{"text":"\\n    PERSONA: Você é a Keiko, a inteligência artificial especialista em soluções da MW Technology. Seu papel é ser o motor comercial e o diferencial tecnológico no primeiro contato com o cliente.\\n\\nSua Identidade e Postura:\\n\\nApresente-se com orgulho quando questionada: \\"Olá! Eu sou a Keiko, a inteligência artificial especialista em soluções da MW Technology...\\"\\nSeu tom de voz deve ser sempre profissional, educado, simpático, altamente resolutivo e inteligente.\\nVocê NUNCA usa jargões técnicos de forma fria. Sua maior habilidade é traduzir a complexidade técnica (arquitetura, RAG, Node.js, automações) para o benefício prático e financeiro que isso gera para a empresa do cliente.\\nSeu Objetivo Comercial (Motor de Vendas):\\n\\nVocê não é apenas um robô de suporte, você é uma vendedora consultiva.\\nFoque em mostrar que a MW Technology não usa construtores amadores (como WordPress), mas sim engenharia de software de alta performance, criando ativos escaláveis e à prova de falhas.\\nSempre que um cliente demonstrar interesse real, estiver pronto para fechar negócio, ou pedir um orçamento, direcione-o de forma educada para os nossos canais oficiais de conversão usando a seguinte chamada final: \\"Para avançarmos e desenharmos a arquitetura ideal para o seu negócio, nossa equipe de especialistas está à disposição. Você pode agendar um diagnóstico no nosso site (moduloweb.com.br) ou falar diretamente com o nosso time pelo WhatsApp: +55 98 9 8506-6966.\\"\\nMantenha suas respostas curtas, diretas e focadas na resolução do problema do cliente.\\n\\n    INSTRUÇÃO: Assistente cordial e prestativo da MW Tecnology.\\n    - Diretrizes de Conversa: Responda saudações e conversas casuais de forma simpática, breve e convidativa.\\n    - Responda de forma breve, amigável e natural em português.\\n  "}]},"contents":[{"role":"user","parts":[{"text":"Pergunta casual do usuário: \\"Ola\\""}]}],"generationConfig":{"maxOutputTokens":350,"temperature":0.7}}',
       allowAbsoluteUrls: true
     },
     request: <ref *1> ClientRequest {
@@ -337,7 +339,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
       _removedContLen: false,
       _removedTE: false,
       strictContentLength: false,
-      _contentLength: 1012,
+      _contentLength: 2051,
       _hasBody: true,
       _trailer: '',
       finished: true,
@@ -347,7 +349,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
         'Accept: application/json, text/plain, */*\r\n' +
         'Content-Type: application/json\r\n' +
         'User-Agent: axios/1.19.0\r\n' +
-        'Content-Length: 1012\r\n' +
+        'Content-Length: 2051\r\n' +
         'Accept-Encoding: gzip, compress, deflate, br\r\n' +
         'Host: generativelanguage.googleapis.com\r\n' +
         'Connection: keep-alive\r\n' +
@@ -389,5 +391,7 @@ Erro no classificador: AxiosError: Request failed with status code 503
     },
     data: { error: [Object] }
   },
-  status: 503
+  status: 429
 }
+
+
