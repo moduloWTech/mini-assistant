@@ -39,34 +39,38 @@ export class DocumentParser {
   }
 
   /**
-   * Extrai o conteúdo textual de uma URL pública via Web Scraping.
+   * Extrai o conteúdo textual de uma URL pública via Web Scraping com Puppeteer (Suporta SPAs React).
    */
   async scrapeUrl(url: string): Promise<{ title: string; text: string }> {
+    const puppeteer = require("puppeteer");
+    let browser;
     try {
-      const response = await axios.get(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        },
-        timeout: 10000
+      // --no-sandbox e --disable-setuid-sandbox evitam crash no linux/servidores sem root
+      browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+      const page = await browser.newPage();
+      
+      // Espera até que o tráfego de rede estabilize, dando tempo ao React de renderizar a DOM
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+      
+      const title = await page.title();
+      
+      const text = await page.evaluate(() => {
+        // Limpeza de tags desnecessárias
+        const elementsToRemove = document.querySelectorAll('script, style, noscript, iframe, nav, footer, header, svg');
+        elementsToRemove.forEach(el => el.remove());
+        
+        let content = document.body.innerText || document.body.textContent || "";
+        return content.replace(/\s+/g, " ").trim();
       });
 
-      const $ = cheerio.load(response.data);
-
-      // Remove tags irrelevantes
-      $("script, style, noscript, iframe, nav, footer, header, svg").remove();
-
-      const title = $("title").text().trim() || url;
-      
-      // Coleta o texto dos elementos semânticos principais
-      const bodyText = $("body").text()
-        .replace(/\s+/g, " ")
-        .replace(/\n+/g, "\n")
-        .trim();
-
-      return { title, text: bodyText };
+      return { title: title || url, text };
     } catch (error: any) {
-      console.error("[DocumentParser] Erro ao raspar URL:", error);
-      throw new Error(`Falha ao acessar URL: ${error.message}`);
+      console.error("[DocumentParser] Erro ao raspar URL com Puppeteer:", error);
+      throw new Error(`Falha ao acessar URL via Puppeteer: ${error.message}`);
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
   }
 
