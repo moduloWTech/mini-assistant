@@ -26,7 +26,7 @@ async function testMemory() {
       data: {
         clientId: client.id,
         smalltalkGuidelines: "Seja muito amigável, chame o usuário pelo nome se souber, e aja como um humano.",
-        agentDescription: "Você é a Keiko, assistente virtual simpática.",
+        agentDescription: "Você é a Agente, assistente virtual simpática.",
       }
     });
   }
@@ -37,7 +37,7 @@ async function testMemory() {
       data: {
         clientId: client.id,
         memoryGuidelines: "Lembre-se sempre de quem você está falando baseado no histórico, se ele informou o nome, use-o.",
-        agentDescription: "Você é a Keiko, uma assistente com excelente memória.",
+        agentDescription: "Você é a Agente, uma assistente com excelente memória.",
       }
     });
   }
@@ -61,7 +61,7 @@ async function testMemory() {
 
     const resposta = await orchestrator(chat, chat, clientId, userId);
 
-    console.log(`[Turno ${i + 1}] 🤖 Keiko (Categoria: ${resposta.category}): ${resposta.message}\n`);
+    console.log(`[Turno ${i + 1}] 🤖 Agente (Categoria: ${resposta.category}): ${resposta.message}\n`);
 
     await new Promise(resolve => setTimeout(resolve, 3000));
   }

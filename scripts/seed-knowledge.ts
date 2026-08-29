@@ -66,7 +66,7 @@ async function seedKnowledge() {
     }
   ];
 
-  console.log(`🚀 Alimentando cérebro da Keiko para: ${client.name}...`);
+  console.log(`🚀 Alimentando cérebro da Agente para: ${client.name}...`);
 
   try {
     // Limpa conhecimento antigo antes de inserir o novo (opcional, mas bom para evitar duplicidade)

@@ -21,7 +21,7 @@ async function run() {
   const users = await prisma.endUser.deleteMany({});
   console.log(`Apagados ${users.count} usuários finais (EndUser)`);
   
-  console.log("Limpeza concluída! A Keiko perdeu toda a memória antiga e está zerada.");
+  console.log("Limpeza concluída! A Agente perdeu toda a memória antiga e está zerada.");
   await prisma.$disconnect();
 }
 run();

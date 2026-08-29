@@ -3,7 +3,7 @@ import cors from 'cors';
 
 const app = express();
 
-const strictCors = cors({ origin: 'https://keiko.moduloweb.com.br' });
+const strictCors = cors({ origin: 'https://agente.moduloweb.com.br' });
 const openCors = cors({ origin: '*' });
 
 const webRouter = express.Router();

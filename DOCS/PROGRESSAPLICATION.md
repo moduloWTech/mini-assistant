@@ -74,7 +74,7 @@ npx tsx scripts/test-channels.ts
 3. **Widget de Chat**: Componente pronto para ser colado na Home dos clientes.
 
 ### 4.3. Fase 6: Tool Use e Integrações
-1. **Function Calling**: Permitir que a Keiko consulte o banco de dados em tempo real.
+1. **Function Calling**: Permitir que a Agente consulte o banco de dados em tempo real.
 2. **Integração CRM / Gestão (Linear)**: Acesso a tickets e issues em tempo real via Function Calling.
 
 ### 4.4. Otimização de Custos e Roteamento (Concluído ✅)

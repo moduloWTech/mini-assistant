@@ -21,7 +21,7 @@ async function seedAdmin() {
         email: "contato@moduloweb.com.br",
         companyName: "MW Technology",
         niche: "services",
-        systemPersona: "Você é a Keiko, assistente inteligente da MW Technology. Seu tom é profissional, simpático e acolhedor."
+        systemPersona: "Você é a Agente, assistente inteligente da MW Technology. Seu tom é profissional, simpático e acolhedor."
       }
     });
   }

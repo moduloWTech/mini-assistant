@@ -2,7 +2,7 @@ import "dotenv/config";
 import { orchestrator } from "./src/orchestrator/orchestrator";
 import { prisma } from "./src/DB/prisma.config";
 
-async function testKeiko() {
+async function testAgente() {
   const clientEmail = "contato.moduloweb@gmail.com";
   const client = await prisma.client.findUnique({ where: { email: clientEmail } });
 
@@ -11,14 +11,14 @@ async function testKeiko() {
     return;
   }
 
-  const question = "Ola, keiko";
+  const question = "Ola, agente";
   console.log(`\n👤 Usuário: ${question}`);
   
   const response = await orchestrator(question, question, client.id);
   
-  console.log(`\n🤖 Keiko: ${response.message}`);
+  console.log(`\n🤖 Agente: ${response.message}`);
   
   await prisma.$disconnect();
 }
 
-testKeiko();
+testAgente();

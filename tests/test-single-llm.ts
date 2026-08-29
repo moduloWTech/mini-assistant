@@ -43,7 +43,7 @@ async function runTest() {
     const result = await orchestrator(testQuestion, testQuestion, clientId, "test_user_unique");
     const duration = Date.now() - start;
 
-    console.log(`\n📥 Resposta recebida da Keiko em ${duration}ms:`);
+    console.log(`\n📥 Resposta recebida da Agente em ${duration}ms:`);
     console.log(`🤖 Categoria Classificada: "${result.category}"`);
     console.log(`💬 Resposta: "${result.message}"`);
     console.log(`\n==========================================`);

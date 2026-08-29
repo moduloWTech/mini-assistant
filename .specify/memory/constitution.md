@@ -1,32 +1,24 @@
-# 🏛️ Constituição MW Technology - Padrões & Diretrizes SDD (Spec-Driven Development)
+# 🏛️ Constituição MW Technology - Diretrizes Oficiais (Spec-Driven Development)
 
-## 1. Princípios Fundamentais & Visão
-- **Engenharia Sob Medida**: Desenvolvemos soluções 100% sob medida em Node.js, TypeScript e React/Next.js. Não utilizamos construtores visuais genéricos (como WordPress).
-- **Abordagem SDD (Specification-Driven Development)**: A especificação mantida no diretório `.specify/` é o artefato vivo e a fonte da verdade para arquitetura, testes e código. A IA e os desenvolvedores leem as especificações antes de executar alterações.
-- **Proatividade & Comunicação em PT-BR**: Toda a documentação e interações do agente devem ser em Português do Brasil de forma clara, profissional e orientada a resultados.
+## 1. Visão de Produto e Negócios (Regra Inegociável)
+- **Plataforma Empresarial White-Label**: O Mini-Assistant **não é** um SaaS operado pela MW Technology focado no cliente final. Ele é uma plataforma de agentes de IA desenvolvida para ser **licenciada** e **implantada na infraestrutura do comprador/parceiro**.
+- **Customer-Hosted (BYOI/BYOK)**: A arquitetura não deve pressupor dependência da MW Technology. O software deve aceitar infraestrutura providenciada pelo cliente (Bring Your Own Infrastructure) e chaves de APIs custeadas pelo cliente (Bring Your Own Key - Gemini, OpenAI, etc).
+- **Agentes de Execução**: Abandonamos o modelo puramente "chatbot". Os agentes são entidades que executam tarefas (integrações com CRM, webhooks, agendamentos, etc). A plataforma suporta **múltiplos agentes** especializados por empresa.
 
 ---
 
 ## 2. Padrões de Arquitetura & Stack Tecnológica
-- **Backend Core**: Node.js (v20+), Express 5, TypeScript.
-- **Inteligência Artificial & LLM**: Google Gemini API (modelos Gemini 2.5 Flash / Embeddings 768 dimensões).
+- **Engenharia Sob Medida**: Desenvolvemos soluções 100% sob medida em Node.js, TypeScript e React/Next.js. Não utilizamos construtores visuais genéricos (como WordPress).
+- **Backend Core**: Node.js (v20+), Fastify / Express 5, TypeScript.
+- **Inteligência Artificial & LLM**: Google Gemini API nativo, porém com interface orquestradora que permita troca para outros LLMs compatíveis no futuro (BYOK).
 - **Banco de Dados Relacional & Vetorial**: PostgreSQL com extensão `pgvector` gerenciado via **Prisma ORM**.
-- **Processamento Assíncrono & Filas**: Redis + **BullMQ**. Webhooks (WhatsApp Meta, Telegram, Web) **nunca** executam LLM sincronicamente; eles enfileiram a tarefa e retornam HTTP 200 instantaneamente.
-- **Segurança B2B & Criptografia**: Chaves de API e tokens de clientes são criptografados obrigatoriamente no banco usando `AES-256-GCM`.
+- **Processamento Assíncrono & Filas**: Redis + **BullMQ**. Webhooks (WhatsApp Meta, Telegram, Web) **nunca** executam chamadas pesadas sincronicamente. Eles devem enfileirar a tarefa e retornar HTTP 200 instantaneamente.
 
 ---
 
 ## 3. Diretrizes de Qualidade de Código & Segurança
-- **Tratamento Estrito de Exceções**: Proibido `try/catch` silencioso ou engolir erros técnicos. Exceções devem ser capturadas, registradas e tratadas com sistemas de fallback amigáveis ao usuário final.
-- **Sem Modificações de Contrato Sem Refatoração**: Qualquer alteração em assinaturas de funções ou tabelas do Prisma deve atualizar todos os pontos de invocação.
-- **Testes & Validação**: Não declarar conclusão de funcionalidade sem executar compilação (`npm run build`) e bateria de testes (`npx tsx scripts/tests/...`).
+- **Segurança B2B & Criptografia (Mandatório)**: Chaves de API, segredos e tokens de clientes **NUNCA** devem ser hardcoded. Devem ser salvos no banco de dados e criptografados obrigatoriamente usando `AES-256-GCM` com a chave mestre do `.env`.
+- **Tratamento Estrito de Exceções**: Proibido `try/catch` silencioso ou engolir erros técnicos (como quedas da API do Gemini ou DB). As exceções devem ser capturadas e possuir fallbacks.
+- **Abordagem SDD**: O diretório `.specify/` e os documentos na pasta `DOCS/` governam as regras de arquitetura. Toda IA deve validar o design contra o *Documento Mestre do Produto* antes de codificar.
 
----
 
-## 4. Persona Keiko & Regras de Atendimento MW
-- A persona **Keiko** é a atendente virtual e especialista comercial da MW Technology.
-- Tom de voz profissional, resolutivo e seguro, traduzindo termos técnicos em valor prático para o cliente.
-- Sempre direciona clientes prontos para fechamento aos canais oficiais:
-  - **Site**: `moduloweb.com.br`
-  - **WhatsApp Comercial**: `+55 98 9 8506-6966`
-  - **Instagram**: `@modulo_web_`

@@ -99,13 +99,13 @@ async function ingestFormCache() {
     console.log(`🤖 Chamando Gemini 2.5 Flash para gerar 70 variações de Q&A...`);
     const prompt = `
 Você é um gerador de dados sintéticos para cache vetorial de atendimento de IA.
-Estamos configurando a atendente virtual Keiko para a empresa MW Technology.
+Estamos configurando a atendente virtual Agente para a empresa MW Technology.
 
 Com base na pergunta mestre e na resposta oficial fornecidas abaixo, gere 70 variações de perguntas casuais, curtas, formais, informais ou técnicas que um cliente final poderia fazer sobre este tópico no chat.
-Para cada variação, forneça a resposta exata e natural que a Keiko deve dar.
+Para cada variação, forneça a resposta exata e natural que a Agente deve dar.
 
 REGRAS CRÍTICAS PARA A RESPOSTA GERADA:
-1. Siga estritamente a Persona da Keiko: tom profissional, educado, inteligente, resolutivo. Ela fala no plural em nome da empresa ('nós', 'nosso time', 'nossa equipe').
+1. Siga estritamente a Persona da Agente: tom profissional, educado, inteligente, resolutivo. Ela fala no plural em nome da empresa ('nós', 'nosso time', 'nossa equipe').
 2. NUNCA utilize nomes próprios nas respostas. Sempre que for citar ou saudar o usuário, use obrigatoriamente a tag {{name}} no lugar do nome. Ex: "Olá, {{name}}!..." ou "Entendo perfeitamente, {{name}}."
 3. Se a pergunta demonstrar intenção direta de fechar, orçar ou entrar em contato, adicione ao final da resposta a tag secreta de redirecionamento: [REDIRECT:https://www.moduloweb.com.br/diagnostico]. Mas não force isso em respostas puramente informativas.
 4. Mantenha as respostas curtas e diretas, com no máximo 1 a 2 parágrafos breves.

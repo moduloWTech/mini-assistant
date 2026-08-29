@@ -22,7 +22,7 @@ async function setupManualClient() {
   };
 
   try {
-    console.log("🚀 Configurando cliente e personalidade da Keiko...");
+    console.log("🚀 Configurando cliente e personalidade da Agente...");
 
     const client = await prisma.client.upsert({
       where: { email: clientData.email },
@@ -34,7 +34,7 @@ async function setupManualClient() {
         whatsappBusinessId: clientData.whatsappBusinessId,
         telegramBotToken: encryptToken(clientData.telegramBotToken),
         telegramVerifyToken: clientData.telegramVerifyToken,
-        systemPersona: `Você é Keiko, a Assistente Inteligente da MW Technology. Seu tom é simpático, profissional, gentil e direto. 
+        systemPersona: `Você é Agente, a Assistente Inteligente da MW Technology. Seu tom é simpático, profissional, gentil e direto. 
         Sua missão é transformar ideias complexas em ferramentas digitais lucrativas. 
         Você fala com autoridade técnica sobre React, Node.js e Supabase. Nunca prometa prazos fixos ou faturamento. 
         Se falarem de WordPress, destaque que a MW foca em performance e autonomia.
@@ -54,7 +54,7 @@ async function setupManualClient() {
         whatsappBusinessId: clientData.whatsappBusinessId,
         telegramBotToken: encryptToken(clientData.telegramBotToken),
         telegramVerifyToken: clientData.telegramVerifyToken,
-        systemPersona: `Você é Keiko, a Assistente Inteligente da MW Technology. Seu tom é simpático, profissional, gentil e direto. 
+        systemPersona: `Você é Agente, a Assistente Inteligente da MW Technology. Seu tom é simpático, profissional, gentil e direto. 
         Sua missão é transformar ideias complexas em ferramentas digitais lucrativas. 
         Você fala com autoridade técnica sobre React, Node.js e Supabase. Nunca prometa prazos fixos ou faturamento. 
         Se falarem de WordPress, destaque que a MW foca em performance e autonomia.
@@ -69,7 +69,7 @@ async function setupManualClient() {
 
     const clientId = client.id;
 
-    // --- CONFIGURAÇÃO DA PERSONALIDADE (KEIKO) ---
+    // --- CONFIGURAÇÃO DA PERSONALIDADE (AGENTE) ---
 
     // 1. Configuração de História e Tom
     await prisma.historyConfig.upsert({
@@ -152,12 +152,12 @@ async function setupManualClient() {
       create: {
         id: clientId,
         clientId: clientId,
-        agentDescription: "Você é o guardião das memórias da Keiko. Seu objetivo é ajudar a resgatar informações de interações anteriores com o cliente para dar contexto à conversa.",
+        agentDescription: "Você é o guardião das memórias da Agente. Seu objetivo é ajudar a resgatar informações de interações anteriores com o cliente para dar contexto à conversa.",
         memoryGuidelines: "Sempre que usar a memória, seja natural e mostre que você prestou atenção. Nunca diga 'eu li no banco de dados', apenas haja como um humano que se lembra de um detalhe."
       }
     });
 
-    console.log(`✅ Keiko configurada com sucesso para ${client.companyName}!`);
+    console.log(`✅ Agente configurada com sucesso para ${client.companyName}!`);
     console.log(`\n🌟 O SEU ID REAL DE PRODUCAO É: ${client.id}\n`);
 
   } catch (error) {

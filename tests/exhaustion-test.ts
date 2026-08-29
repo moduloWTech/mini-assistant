@@ -13,7 +13,7 @@ const BASE_URL = 'http://localhost:3000';
 
 async function runExhaustionTest() {
   try {
-    // 1. Pegar o cliente principal (Keiko) configurado via setup-manual
+    // 1. Pegar o cliente principal (Agente) configurado via setup-manual
     const latestClient = await prisma.client.findUnique({
       where: { id: "058155d3-1494-42c6-a9cd-f134b4000452" }
     });

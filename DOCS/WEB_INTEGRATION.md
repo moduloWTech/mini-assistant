@@ -1,6 +1,6 @@
-# 🌐 Guia de Integração Web (Widget de Exemplo: Keiko)
+# 🌐 Guia de Integração Web (Widget de Exemplo: Agente)
 
-Este documento ensina como integrar a inteligência da **Keiko** (agente de teste da MW Technology utilizado como caso de uso) ou qualquer outro agente de atendimento criado nesta plataforma SaaS dentro de uma aplicação Frontend (React, Next.js, Vue, Vanilla JS).
+Este documento ensina como integrar a inteligência da **Agente** (agente de teste da MW Technology utilizado como caso de uso) ou qualquer outro agente de atendimento criado nesta plataforma SaaS dentro de uma aplicação Frontend (React, Next.js, Vue, Vanilla JS).
 
 Em vez de usar canais de terceiros como WhatsApp ou Telegram, você pode criar o seu próprio "Chatbot Widget" flutuante ou fixo na página inicial (Home Page) do seu site.
 
@@ -26,7 +26,7 @@ Para que o Orquestrador saiba quem está falando e de qual cliente é esse bot, 
 ```
 
 - **`text`**: O que o usuário digitou no chat do site.
-- **`clientId`**: O UUID da sua empresa no banco de dados (o mesmo usado na Keiko). Se você perdeu esse ID, busque no banco da VM a tabela `Client`.
+- **`clientId`**: O UUID da sua empresa no banco de dados (o mesmo usado na Agente). Se você perdeu esse ID, busque no banco da VM a tabela `Client`.
 - **`userId`**: Um ID único e aleatório gerado pelo Frontend (usando `uuid` ou apenas `Date.now().toString()`) quando o visitante acessa o site. **É crucial enviar sempre o mesmo `userId` durante a mesma sessão para que o bot lembre do histórico da conversa**.
 
 ### 📨 Resposta (O que a API devolve)
@@ -49,12 +49,12 @@ Abaixo está um modelo pronto de um componente `ChatWidget.tsx` que você pode c
 import { useState, useRef, useEffect } from 'react';
 
 // O ID do cliente gerado no banco de dados quando rodamos o script "setup-client"
-const KEIKO_CLIENT_ID = "SEU_CLIENT_ID_AQUI"; 
+const AGENT_CLIENT_ID = "SEU_CLIENT_ID_AQUI"; 
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{sender: 'user' | 'bot', text: string}[]>([
-    { sender: 'bot', text: 'Olá! Eu sou a Keiko, da MW Technology. Como posso te ajudar hoje?' }
+    { sender: 'bot', text: 'Olá! Eu sou a Agente, da MW Technology. Como posso te ajudar hoje?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +83,7 @@ export default function ChatWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: userMsg,
-          clientId: KEIKO_CLIENT_ID,
+          clientId: AGENT_CLIENT_ID,
           userId: userId
         })
       });
@@ -108,7 +108,7 @@ export default function ChatWidget() {
 
       setMessages(prev => [...prev, { sender: 'bot', text: botResponse }]);
     } catch (error) {
-      console.error("Erro ao falar com a Keiko:", error);
+      console.error("Erro ao falar com a Agente:", error);
       setMessages(prev => [...prev, { sender: 'bot', text: 'Desculpe, meus servidores estão muito ocupados. Pode tentar de novo em um segundo?' }]);
     } finally {
       setIsLoading(false);
@@ -123,7 +123,7 @@ export default function ChatWidget() {
           onClick={() => setIsOpen(true)}
           className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition"
         >
-          💬 Falar com a Keiko
+          💬 Falar com a Agente
         </button>
       )}
 
@@ -132,7 +132,7 @@ export default function ChatWidget() {
         <div className="w-80 h-96 bg-white shadow-2xl rounded-lg flex flex-col overflow-hidden border border-gray-200">
           {/* Header */}
           <div className="bg-blue-600 p-3 text-white flex justify-between items-center">
-            <span className="font-bold">Keiko (MW Technology)</span>
+            <span className="font-bold">Agente (MW Technology)</span>
             <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-300">
               ✖
             </button>
@@ -147,7 +147,7 @@ export default function ChatWidget() {
             ))}
             {isLoading && (
               <div className="bg-gray-200 text-gray-800 self-start rounded-lg rounded-bl-none p-3 animate-pulse">
-                Keiko está digitando...
+                Agente está digitando...
               </div>
             )}
             <div ref={endOfMessagesRef} />
@@ -181,7 +181,7 @@ export default function ChatWidget() {
 
 ## 🚀 3. Tratamento de Erro Comum (CORS)
 
-Ao implementar a Keiko no Frontend de produção, os navegadores possuem uma trava de segurança chamada **CORS**. Eles bloqueiam requisições AJAX (`fetch`) feitas do seu site (`meusite.com`) para a nossa API (`api.moduloweb.com.br`) se a API não autorizar expressamente aquele site.
+Ao implementar a Agente no Frontend de produção, os navegadores possuem uma trava de segurança chamada **CORS**. Eles bloqueiam requisições AJAX (`fetch`) feitas do seu site (`meusite.com`) para a nossa API (`api.moduloweb.com.br`) se a API não autorizar expressamente aquele site.
 
 Se você receber um erro vermelho de CORS no console do Chrome (`Access to fetch at... from origin... has been blocked by CORS policy`), você só precisa fazer uma alteração simples no Backend:
 
