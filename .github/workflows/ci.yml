@@ -59,8 +59,7 @@ jobs:
         
         # Conexões apontando para os serviços que subiram no runner
         DATABASE_URL: "postgresql://postgres:password123@localhost:5432/mini_assistant_test?schema=public"
-        REDIS_HOST: "localhost"
-        REDIS_PORT: "6379"
+        REDIS_URL: "redis://127.0.0.1:6379"
         
         # Pode colocar chaves dummy para outras variáveis caso os testes precisem
         JWT_SECRET: "dummy_jwt_secret"
