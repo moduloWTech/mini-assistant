@@ -1,8 +1,8 @@
 import { Router, Response } from "express";
 import multer from "multer";
 import { prisma } from "../DB/prisma.config";
-import { documentParser } from "../services/parser/documentParser";
-import { generateEmbedding } from "../services/embeddingService";
+import { documentParser } from "../providers/parser/documentParser";
+import { generateEmbedding } from "../providers/embeddingService";
 import { authMiddleware, AuthRequest } from "../middlewares/auth.middleware";
 
 const knowledgeRouter = Router();

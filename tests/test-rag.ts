@@ -1,4 +1,4 @@
-import { generateEmbedding } from '../src/services/embeddingService';
+import { generateEmbedding } from '../src/providers/embeddingService';
 import { prisma } from '../src/DB/prisma.config';
 import * as dotenv from 'dotenv';
 dotenv.config();

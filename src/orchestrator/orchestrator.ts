@@ -1,4 +1,4 @@
-import { classifyTask } from "../services/classifyService";
+import { classifyTask } from "../providers/classifyService";
 import { historyAgent } from "../agentns/historyAgent";
 import { servicesAgent } from "../agentns/servicesAgent";
 import { memoryAgent } from "../agentns/memoryAgent";

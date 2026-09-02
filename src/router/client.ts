@@ -4,7 +4,7 @@ import axios from "axios";
 import { prisma } from "../DB/prisma.config";
 import { authMiddleware, AuthRequest } from "../middlewares/auth.middleware";
 import { encryptToken, decryptToken } from "../utils/encryption";
-import { ensureClientConfigs } from "../services/ensureClientConfigs";
+import { ensureClientConfigs } from "../providers/ensureClientConfigs";
 
 const clientRouter = Router();
 

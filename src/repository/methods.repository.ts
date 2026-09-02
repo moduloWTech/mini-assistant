@@ -1,7 +1,7 @@
 import { IFindSimilarQuestion, IKnowledgeChunkData, IMethodsRepository, ISaveToDatabase } from "../interfaces/interfaces";
 import { prisma } from "../DB/prisma.config";
 import { Classification } from "@prisma/client";
-import { generateEmbedding } from "../services/embeddingService";
+import { generateEmbedding } from "../providers/embeddingService";
 
 export class MethodsRepository implements IMethodsRepository {
     async saveKnowledgeChunk(data: IKnowledgeChunkData): Promise<void> {

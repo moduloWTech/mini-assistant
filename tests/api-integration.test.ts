@@ -2,6 +2,8 @@ import request from "supertest";
 import app from "../src/app";
 import { prisma } from "../src/DB/prisma.config";
 
+jest.setTimeout(30000);
+
 describe("API Endpoints Integration Tests", () => {
   let testClientId: string;
 

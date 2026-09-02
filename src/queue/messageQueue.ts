@@ -1,7 +1,7 @@
 import { Queue, Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { orchestrator } from '../orchestrator/orchestrator';
-import { formatResponse } from '../services/formatResponse';
+import { formatResponse } from "../providers/formatResponse";
 import { prisma } from '../DB/prisma.config';
 import { decryptToken } from '../utils/encryption';
 import { ChatMemoryRepository } from '../repository/chatMemory.repository';

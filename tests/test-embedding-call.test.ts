@@ -1,4 +1,4 @@
-import { EmbeddingService } from "../src/services/embeddingService";
+import { EmbeddingService } from "../src/providers/embeddingService";
 import dotenv from "dotenv";
 
 dotenv.config();

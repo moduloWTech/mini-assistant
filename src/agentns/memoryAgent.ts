@@ -1,8 +1,8 @@
 import { MethodsRepository } from '../repository/methods.repository';
-import { callGeminiAgent } from '../services/callGeminiAgent';
-import { erroAgente } from '../services/erroAgent';
+import { callGeminiAgent } from "../providers/callGeminiAgent";
+import { erroAgente } from "../providers/erroAgent";
 import { prisma } from '../DB/prisma.config';
-import { ensureClientConfigs } from '../services/ensureClientConfigs';
+import { ensureClientConfigs } from "../providers/ensureClientConfigs";
 
 const repo = new MethodsRepository();
 

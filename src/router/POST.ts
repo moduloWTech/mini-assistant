@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express"; 
 import { orchestrator } from "../orchestrator/orchestrator";
-import { formatResponse } from "../services/formatResponse";
+import { formatResponse } from "../providers/formatResponse";
 
 const postRouter = Router();
 

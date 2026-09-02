@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import { encryptToken } from "../utils/encryption";
-import { ensureClientConfigs } from "../services/ensureClientConfigs";
+import { ensureClientConfigs } from "../providers/ensureClientConfigs";
 
 const authRouter = Router();
 

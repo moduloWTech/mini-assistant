@@ -1,9 +1,9 @@
 import { MethodsRepository } from '../repository/methods.repository';
-import { callGeminiAgent } from '../services/callGeminiAgent';
-import { erroAgente } from '../services/erroAgent';
+import { callGeminiAgent } from "../providers/callGeminiAgent";
+import { erroAgente } from "../providers/erroAgent";
 import { prisma } from '../DB/prisma.config';
-import { EmbeddingService } from '../services/embeddingService';
-import { ensureClientConfigs } from '../services/ensureClientConfigs';
+import { EmbeddingService } from "../providers/embeddingService";
+import { ensureClientConfigs } from "../providers/ensureClientConfigs";
 
 const repo = new MethodsRepository();
 const embeddingService = new EmbeddingService();

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { callGeminiAgent } from './src/services/callGeminiAgent';
+import { callGeminiAgent } from '../src/providers/callGeminiAgent';
 
 const prisma = new PrismaClient();
 

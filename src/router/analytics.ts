@@ -1,10 +1,15 @@
 import { Router, Response } from "express";
-import { prisma } from "../DB/prisma.config";
 import { authMiddleware, AuthRequest } from "../middlewares/auth.middleware";
+import { AnalyticsRepository } from "../repository/relational/analytics.repository";
+import { GetAnalyticsOverviewUseCase } from "../usecases/analytics/getAnalyticsOverview.usecase";
 
 const analyticsRouter = Router();
 
 analyticsRouter.use(authMiddleware);
+
+// Instanciando as dependências (poderia ser feito com um container de DI como TSyringe futuramente)
+const analyticsRepository = new AnalyticsRepository();
+const getAnalyticsOverviewUseCase = new GetAnalyticsOverviewUseCase(analyticsRepository);
 
 /**
  * GET /analytics/overview - Visão geral de métricas e economia de tokens
@@ -12,39 +17,13 @@ analyticsRouter.use(authMiddleware);
 analyticsRouter.get("/overview", async (req: AuthRequest, res: Response) => {
   const clientId = req.user?.clientId;
 
+  if (!clientId) {
+    return res.status(401).json({ error: "Usuário não autenticado adequadamente." });
+  }
+
   try {
-    const [totalConversations, totalMessages, totalLeads, totalDocuments] = await Promise.all([
-      prisma.endUser.count({ where: { clientId } }),
-      prisma.message.count({ where: { endUser: { clientId } } }),
-      prisma.lead.count({ where: { clientId } }),
-      prisma.documentSource.count({ where: { clientId } })
-    ]);
-
-    // Fast-path statistics dos logs
-    const tokenLogs = await prisma.tokenUsageLog.findMany({
-      where: { clientId },
-      take: 200,
-      orderBy: { createdAt: "desc" }
-    });
-
-    const fastPathHits = tokenLogs.filter((log) => log.isFastPath).length;
-    const totalLogs = tokenLogs.length || 1;
-    const fastPathRate = Math.round((fastPathHits / totalLogs) * 100);
-
-    // Estimativa de economia: cada chamada economiza cerca de 600 tokens ($0.00015 por msg)
-    const estimatedSavingsUsd = (fastPathHits * 0.00015).toFixed(4);
-
-    res.status(200).json({
-      summary: {
-        totalConversations,
-        totalMessages,
-        totalLeads,
-        totalDocuments,
-        fastPathRate: `${fastPathRate}%`,
-        estimatedSavingsUsd: `$${estimatedSavingsUsd}`
-      },
-      recentLogs: tokenLogs.slice(0, 10)
-    });
+    const result = await getAnalyticsOverviewUseCase.execute(clientId);
+    res.status(200).json(result);
   } catch (error) {
     console.error("[AnalyticsRouter] Erro ao buscar métricas:", error);
     res.status(500).json({ error: "Erro ao gerar métricas do painel." });
