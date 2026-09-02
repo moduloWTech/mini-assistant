@@ -1,0 +1,67 @@
+name: Node.js CI/CD Test Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    # Serviços acoplados (banco de dados real com vetor e fila)
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: mini_assistant_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20' # Use a versão do Node do projeto
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Prisma Generate & Push (Migrations)
+      run: |
+        npx prisma generate
+        npx prisma db push
+      env:
+        DATABASE_URL: "postgresql://postgres:password123@localhost:5432/mini_assistant_test?schema=public"
+
+    - name: Run Integration Tests (Jest)
+      run: npx jest --forceExit
+      env:
+        # A chave real que você vai cadastrar no GitHub Secrets
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        
+        # Conexões apontando para os serviços que subiram no runner
+        DATABASE_URL: "postgresql://postgres:password123@localhost:5432/mini_assistant_test?schema=public"
+        REDIS_HOST: "localhost"
+        REDIS_PORT: "6379"
+        
+        # Pode colocar chaves dummy para outras variáveis caso os testes precisem
+        JWT_SECRET: "dummy_jwt_secret"
+        PORT: 3000

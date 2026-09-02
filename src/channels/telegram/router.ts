@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../../DB/prisma.config";
-import { messageQueue } from "../../queue/messageQueue";
+import { QueueDispatcher } from "../../queue/QueueDispatcher";
 
 const telegramRouter = Router();
 
@@ -37,20 +37,16 @@ telegramRouter.post("/:verifyToken", async (req: Request, res: Response) => {
 
     const name = update.message.from.first_name || update.message.from.username || "User";
 
-    // 2. Add message to processing queue
-    await messageQueue.add('telegram-message', {
+    const messageId = update.message.message_id.toString();
+
+    // 2. Add message to processing queue via Dispatcher
+    await QueueDispatcher.dispatch('telegram', {
       channel: 'telegram',
       chatId,
       text,
       clientId: client.id,
       name
-    }, {
-      attempts: 5,
-      backoff: {
-        type: 'exponential',
-        delay: 5000 // Inicia esperando 5s, depois 10s, 20s...
-      }
-    });
+    }, messageId);
 
     res.sendStatus(200);
   } catch (error: any) {

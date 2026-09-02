@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { prisma } from "../../DB/prisma.config";
-import { messageQueue } from "../../queue/messageQueue";
+import { QueueDispatcher } from "../../queue/QueueDispatcher";
 
 const whatsappRouter = Router();
 
@@ -58,20 +58,14 @@ whatsappRouter.post("/whatsapp", async (req: Request, res: Response) => {
 
     const name = change.value.contacts?.[0]?.profile?.name || "Cliente WhatsApp";
 
-    await messageQueue.add("whatsapp-message", {
+    await QueueDispatcher.dispatch("whatsapp", {
       channel: "whatsapp",
       phoneNumberId,
       from,
       text,
       clientId: client.id,
       name
-    }, {
-      attempts: 5,
-      backoff: {
-        type: 'exponential',
-        delay: 5000
-      }
-    });
+    }, message.id);
 
     res.sendStatus(200);
   } catch (error) {
